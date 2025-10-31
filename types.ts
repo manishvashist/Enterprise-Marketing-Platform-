@@ -1,3 +1,4 @@
+
 export enum NodeType {
   TRIGGER = 'TRIGGER',
   ACTION = 'ACTION',
@@ -178,6 +179,10 @@ export interface ChannelAssetGenerationResult {
 
 
 export interface Campaign {
+  id?: string; // Optional: will not exist on a newly generated campaign
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
   name: string;
   description: string;
   audienceQuery: string;
@@ -189,4 +194,95 @@ export interface Campaign {
   channelSelection?: ChannelSelectionInterface;
   channelAssets?: Record<string, ChannelAssetGenerationResult>;
   nodes: JourneyNode[];
+}
+
+// --- NEW TYPES for Channel Connection & Execution ---
+
+export type ChannelConnectionStatus = 'disconnected' | 'connected' | 'error';
+export type AuthMethod = 'OAuth 2.0' | 'API Key';
+
+export interface ChannelFeatures {
+  canPublishPosts: boolean;
+  canCreateAds: boolean;
+  canSchedulePosts: boolean;
+  canAccessAnalytics: boolean;
+  canManageBudget: boolean;
+}
+
+export interface ConnectedAccount {
+    accountId: string;
+    accountName: string;
+    [key: string]: any; // For extra details like followers, ad account info etc.
+}
+export interface ChannelConnection {
+  channelId: string;
+  channelName: string;
+  category: string;
+  connectionStatus: ChannelConnectionStatus;
+  authMethod: AuthMethod;
+  requiredScopes: string[];
+  connectedAccount: ConnectedAccount | null;
+  features: ChannelFeatures;
+  apiEndpoint: string;
+  setupInstructions: string;
+}
+
+export interface AvailableAdAccount {
+  adAccountId: string;
+  adAccountName: string;
+  currency: string;
+  balance: number;
+  spendCap: number;
+}
+export interface AvailableAccount {
+  accountId: string;
+  accountName: string;
+  accountType: 'page' | 'profile' | 'ad_account' | 'channel' | 'list';
+  followers?: number;
+  isActive: boolean;
+  adAccounts?: AvailableAdAccount[];
+}
+
+export type ExecutionStatus = 'pending' | 'scheduled' | 'publishing' | 'published' | 'failed';
+
+export interface ExecutionItem {
+  channelId: string;
+  status: ExecutionStatus;
+  scheduledTime: Date | null;
+  error?: string;
+}
+
+export type CampaignExecutionPlan = Record<string, ExecutionItem>;
+
+// FIX: Add AssetGenerationProgress and VideoAssetState interfaces to centralize types and resolve circular dependencies.
+// --- NEW TYPES for Asset Generation Progress & Video State ---
+export interface AssetGenerationProgress {
+  totalChannels: number;
+  completedChannels: number;
+  isGeneratingAll: boolean;
+  channelProgress: Record<string, {
+    status: 'pending' | 'in-progress' | 'completed' | 'error';
+    percentage: number;
+    error?: string;
+  }>;
+}
+
+export interface VideoAssetState {
+  status: 'pending' | 'loading' | 'done' | 'error';
+  url?: string;
+  error?: string;
+  progressMessage?: string;
+}
+
+// --- NEW TYPES for User Authentication ---
+export type UserRole = 'Admin' | 'Manager' | 'User';
+
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  passwordHash: string; // In a real app, this would never be sent to the client. For simulation only.
+  role: UserRole;
+  createdAt: string;
+  channelConnections: Record<string, ChannelConnection>;
 }

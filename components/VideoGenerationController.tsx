@@ -1,6 +1,6 @@
 import React from 'react';
-import { Channel } from '../types';
-import { VideoAssetState } from '../App';
+// FIX: Import VideoAssetState from types.ts to solve module resolution and circular dependency issues.
+import { Channel, VideoAssetState } from '../types';
 import { VideoCameraIcon } from './icons/VideoCameraIcon';
 
 interface VideoGenerationControllerProps {

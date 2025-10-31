@@ -1,11 +1,16 @@
 import React from 'react';
+import { ProfileDropdown } from './ProfileDropdown';
+import { User } from '../types';
 
+// FIX: Use a specific union type for view and setView to match the state type in MainApp and fix type incompatibility.
 interface HeaderProps {
-  currentView: 'campaign' | 'editor';
-  setView: (view: 'campaign' | 'editor') => void;
+  currentView: 'campaign' | 'editor' | 'connections' | 'admin';
+  setView: (view: 'campaign' | 'editor' | 'connections' | 'admin') => void;
+  user: User;
+  onLogout: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
+export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLogout }) => {
   const navButtonStyle = "px-4 py-2 rounded-md text-sm font-medium transition-colors";
   const activeStyle = "bg-indigo-600 text-white";
   const inactiveStyle = "text-gray-300 hover:bg-gray-700 hover:text-white";
@@ -24,22 +29,41 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           </h1>
         </div>
         
-        <nav className="flex items-center space-x-2 bg-gray-900/50 p-1 rounded-lg">
-            <button 
-              onClick={() => setView('campaign')}
-              className={`${navButtonStyle} ${currentView === 'campaign' ? activeStyle : inactiveStyle}`}
-              aria-current={currentView === 'campaign' ? 'page' : undefined}
-            >
-              Campaign Generator
-            </button>
-            <button 
-              onClick={() => setView('editor')}
-              className={`${navButtonStyle} ${currentView === 'editor' ? activeStyle : inactiveStyle}`}
-              aria-current={currentView === 'editor' ? 'page' : undefined}
-            >
-              Image Editor
-            </button>
-        </nav>
+        <div className="flex items-center space-x-4">
+            <nav className="flex items-center space-x-2 bg-gray-900/50 p-1 rounded-lg">
+                <button 
+                  onClick={() => setView('campaign')}
+                  className={`${navButtonStyle} ${currentView === 'campaign' ? activeStyle : inactiveStyle}`}
+                  aria-current={currentView === 'campaign' ? 'page' : undefined}
+                >
+                  Campaign Generator
+                </button>
+                <button 
+                  onClick={() => setView('editor')}
+                  className={`${navButtonStyle} ${currentView === 'editor' ? activeStyle : inactiveStyle}`}
+                  aria-current={currentView === 'editor' ? 'page' : undefined}
+                >
+                  Image Editor
+                </button>
+                 <button 
+                  onClick={() => setView('connections')}
+                  className={`${navButtonStyle} ${currentView === 'connections' ? activeStyle : inactiveStyle}`}
+                  aria-current={currentView === 'connections' ? 'page' : undefined}
+                >
+                  Connections
+                </button>
+                {user.role === 'Admin' && (
+                   <button 
+                      onClick={() => setView('admin')}
+                      className={`${navButtonStyle} ${currentView === 'admin' ? activeStyle : inactiveStyle}`}
+                      aria-current={currentView === 'admin' ? 'page' : undefined}
+                    >
+                      Admin
+                    </button>
+                )}
+            </nav>
+            <ProfileDropdown user={user} onLogout={onLogout} />
+        </div>
       </div>
     </header>
   );

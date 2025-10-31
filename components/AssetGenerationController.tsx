@@ -1,6 +1,6 @@
 import React from 'react';
-import { AssetGenerationProgress } from '../App';
-import { Channel } from '../types';
+// FIX: Import AssetGenerationProgress from types.ts to solve module resolution and circular dependency issues.
+import { AssetGenerationProgress, Channel } from '../types';
 
 interface AssetGenerationControllerProps {
     progress: AssetGenerationProgress;

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel } from '../types';
+// FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
+import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
 import { JourneyNode } from './JourneyNode';
 import { UserGroupIcon } from './icons/UserGroupIcon';
 import { SparklesIcon } from './icons/SparklesIcon';
@@ -7,13 +8,14 @@ import { GovernanceDashboard } from './GovernanceDashboard';
 import { ChannelSelectionDashboard } from './ChannelSelectionDashboard';
 import { AssetGenerationController } from './AssetGenerationController';
 import { ChannelAssetCard } from './ChannelAssetCard';
-import { AssetGenerationProgress, VideoAssetState } from '../App';
 import { VideoGenerationController } from './VideoGenerationController';
 import { VideoAssetCard } from './VideoAssetCard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { CampaignExecutionManager } from './CampaignExecutionManager';
 
 
 interface JourneyCanvasProps {
+  user: User; // User is now required
   campaign: Campaign | null;
   isLoading: boolean;
   error: string | null;
@@ -25,6 +27,8 @@ interface JourneyCanvasProps {
   videoAssets: Record<string, VideoAssetState>;
   onGenerateVideoForChannel: (channelName: string) => void;
   isApiKeySelected: boolean;
+  channelConnections: Record<string, ChannelConnection>;
+  onSaveCampaign: () => void;
 }
 
 const BranchConnector: React.FC<{ label: string }> = ({ label }) => {
@@ -129,6 +133,7 @@ const AudienceSegment: React.FC<{ campaign: Campaign }> = ({ campaign }) => (
 
 
 export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({ 
+    user,
     campaign, 
     isLoading, 
     error,
@@ -140,6 +145,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     videoAssets,
     onGenerateVideoForChannel,
     isApiKeySelected,
+    channelConnections,
+    onSaveCampaign,
 }) => {
   if (isLoading) {
     return (
@@ -184,12 +191,29 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
   const firstNodeId = campaign.nodes.find(n => n.id === 1) ? 1 : (campaign.nodes[0]?.id || null);
   const generatedAssetChannels = Object.keys(campaign.channelAssets || {});
   const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]) => state.status === 'done' && state.url);
+  const hasGeneratedAssets = generatedAssetChannels.length > 0 || generatedVideoAssets.length > 0;
+  const lastSaved = campaign.updatedAt 
+    ? `Last saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}` 
+    : 'Unsaved';
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 md:p-8">
       <div className="border-b border-gray-700 pb-4 mb-6">
-        <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
-        <p className="text-gray-400 mt-1">{campaign.description}</p>
+        <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
+              <p className="text-gray-400 mt-1">{campaign.description}</p>
+            </div>
+            <div className="flex flex-col items-end flex-shrink-0 ml-4">
+                 <button
+                    onClick={onSaveCampaign}
+                    className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all flex items-center justify-center text-sm"
+                 >
+                     {campaign.id ? 'Update Campaign' : 'Save Campaign'}
+                 </button>
+                 <p className="text-xs text-gray-500 mt-2">{lastSaved}</p>
+            </div>
+        </div>
         <div className="mt-4">
             <h4 className="font-semibold text-gray-300 mb-2">Key Performance Indicators (KPIs):</h4>
             <div className="flex flex-wrap gap-2">
@@ -244,6 +268,14 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
                 ))}
             </div>
         </div>
+      )}
+
+      {hasGeneratedAssets && (
+         <CampaignExecutionManager
+            campaign={campaign}
+            connections={channelConnections}
+            recommendedChannels={recommendedChannels}
+        />
       )}
 
       <h3 className="font-semibold text-lg text-white mb-4 mt-8">Customer Journey Flow</h3>
