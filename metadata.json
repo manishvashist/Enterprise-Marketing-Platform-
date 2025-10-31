@@ -1,5 +1,7 @@
 {
   "name": "Enterprise Marketing Platform",
   "description": "An AI-powered platform to generate and visualize marketing campaign journeys from natural language prompts, embodying the core of the Marketing Operations Module.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

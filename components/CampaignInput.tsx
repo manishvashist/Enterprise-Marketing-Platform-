@@ -1,4 +1,5 @@
 import React from 'react';
+import { MicrophoneIcon } from './icons/MicrophoneIcon';
 
 interface CampaignInputProps {
   goalPrompt: string;
@@ -7,6 +8,8 @@ interface CampaignInputProps {
   setAudiencePrompt: (prompt: string) => void;
   onGenerate: () => void;
   isLoading: boolean;
+  recordingField: 'goal' | 'audience' | null;
+  onToggleRecording: (field: 'goal' | 'audience') => void;
 }
 
 export const CampaignInput: React.FC<CampaignInputProps> = ({ 
@@ -15,7 +18,9 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
   audiencePrompt, 
   setAudiencePrompt, 
   onGenerate, 
-  isLoading 
+  isLoading,
+  recordingField,
+  onToggleRecording,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -24,12 +29,30 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
     }
   };
 
+  const MicButton: React.FC<{field: 'goal' | 'audience'}> = ({ field }) => {
+    const isRecording = recordingField === field;
+    return (
+      <button
+        onClick={() => onToggleRecording(field)}
+        disabled={isLoading}
+        className={`absolute right-3 bottom-3 p-2 rounded-full transition-colors ${
+          isRecording 
+            ? 'bg-purple-600 text-white animate-pulse-ring' 
+            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+        aria-label={isRecording ? `Stop recording ${field}` : `Start recording ${field}`}
+      >
+        <MicrophoneIcon className="w-5 h-5" />
+      </button>
+    );
+  };
+  
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-semibold mb-4 text-indigo-300">Generative Campaign Builder</h2>
       
       <div className="space-y-6">
-        <div>
+        <div className="relative">
           <label htmlFor="campaign-goal" className="block text-sm font-medium text-gray-300 mb-2">
             1. Describe your campaign goal
           </label>
@@ -38,14 +61,14 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
             value={goalPrompt}
             onChange={(e) => setGoalPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            // FIX: Using template literal for placeholder to avoid escaping issues.
-            placeholder={`e.g., "Launch a cart abandonment campaign for mobile users"`}
-            className="w-full h-24 p-4 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
+            placeholder={`e.g., "Increase e-commerce sales by 15% in Q3" or "Drive app downloads for a new fitness tracker"`}
+            className="w-full h-24 p-4 pr-14 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
             disabled={isLoading}
           />
+          <MicButton field="goal" />
         </div>
 
-        <div>
+        <div className="relative">
             <label htmlFor="target-audience" className="block text-sm font-medium text-gray-300 mb-2">
                 2. Define your target audience (using AI Smart Segments)
             </label>
@@ -54,11 +77,11 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
                 value={audiencePrompt}
                 onChange={(e) => setAudiencePrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                // FIX: Using template literal for placeholder to avoid escaping issues with the apostrophe.
                 placeholder={`e.g., "Customers who viewed product X but didn't purchase in the last 30 days"`}
-                className="w-full h-24 p-4 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
+                className="w-full h-24 p-4 pr-14 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
                 disabled={isLoading}
             />
+            <MicButton field="audience" />
         </div>
       </div>
 
@@ -87,3 +110,17 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
     </div>
   );
 };
+
+const styles = `
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(129, 140, 248, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s infinite;
+}
+`;
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);

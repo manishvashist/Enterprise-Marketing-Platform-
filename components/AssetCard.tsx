@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-// FIX: `MarketingAsset` is obsolete. Replaced with `SingleMarketingAsset`.
 import { SingleMarketingAsset, SingleAssetContent } from '../types';
 import { LightBulbIcon } from './icons/LightBulbIcon';
 
 interface AssetCardProps {
-    // FIX: The asset type is now `SingleMarketingAsset` and we manually add the `channel` property,
-    // as this component is designed to show it.
     asset: SingleMarketingAsset & { channel: string };
 }
 
@@ -34,9 +31,6 @@ const renderContentField = (label: string, value: any) => {
 export const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
     const [activeVariant, setActiveVariant] = useState('A');
     
-    // FIX: `asset.content.variants` is now an array (`AssetVariant[]`).
-    // The previous logic for creating variants was based on an object and caused a spread operator error.
-    // This has been updated to correctly process the array of variants into a map, with a base 'A' variant.
     const variantsArray = asset.content.variants || [];
     const hasVariants = variantsArray.length > 0;
 

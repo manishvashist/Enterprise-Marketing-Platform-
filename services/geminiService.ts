@@ -1,4 +1,5 @@
-import { GoogleGenAI, Type } from '@google/genai';
+// @google/genai Coding Guidelines: Do not import `LiveSession` as an explicit return type.
+import { GoogleGenAI, Type, Modality, LiveServerMessage, Blob } from '@google/genai';
 import { Campaign, NodeType, ChannelAssetGenerationResult } from '../types';
 
 // Per coding guidelines, API key is assumed to be available in process.env.API_KEY.
@@ -435,66 +436,33 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
 };
 
 export const generateAssetsForChannel = async (campaign: Campaign, channelName: string, channelCategory: string): Promise<ChannelAssetGenerationResult> => {
-    const systemInstruction = `You are a JSON generation machine. Your ONLY function is to output a single, valid JSON object that strictly follows the provided schema.
+    const systemInstruction = `You are an AI assistant that ONLY outputs a single, valid JSON object. Your entire response must be a JSON object, without any surrounding text or markdown.
 
-**THE MOST IMPORTANT RULE:**
-Every double quote (") character within any JSON string value MUST be escaped with a backslash (\\).
-- CORRECT: { "text": "This is a \\"quote\\"." }
-- INCORRECT: { "text": "This is a "quote"." }
-Failure to follow this rule will result in an error.
+**CRITICAL RULE: ESCAPING QUOTES**
+You MUST escape any double quote (") character inside a JSON string value with a backslash (\\). This is the most common reason for errors.
 
-**SECONDARY RULES:**
-- Do not add any text, explanation, or markdown (like \`\`\`json) before or after the JSON object. The entire output must be the JSON itself.
-- All keys and string values must be enclosed in double quotes.
+- **VALID:** { "example": "He said, \\"Hello world!\\"" }
+- **INVALID:** { "example": "He said, "Hello world!"" }
 
-With those rules in mind, act as an expert creative director. Generate comprehensive marketing assets for the SINGLE CHANNEL specified in the user prompt, based on the provided campaign strategy.`;
+Before finalizing your response, you must review the entire JSON object you have generated and verify that every single double quote within a string value is properly escaped. Failure to do this will result in a failed request.
+
+**TASK:**
+Act as an expert creative director. Generate comprehensive marketing assets for the SINGLE CHANNEL specified in the user prompt, based on the provided campaign strategy, and format the output according to the provided JSON schema.`;
 
     const prompt = `
-Generate platform-specific marketing assets for THIS CHANNEL ONLY.
+Generate platform-specific marketing assets for the channel specified below. The output must be a single, valid JSON object that conforms to the provided schema.
 
-CAMPAIGN STRATEGY:
+CAMPAIGN CONTEXT:
 - Name: ${campaign.name}
 - Description: ${campaign.description}
 - Target Audience: ${campaign.audienceQuery}
 - Core Message: ${campaign.strategy.recommendations}
 
-TARGET CHANNEL:
-${channelName}
+TARGET CHANNEL: ${channelName}
+CHANNEL CATEGORY: ${channelCategory}
 
-CHANNEL CATEGORY:
-${channelCategory}
-
-YOUR TASK:
-Generate production-ready marketing assets for the target channel, following the rules for its category and formatting the output as a single JSON object. Create at least 2 A/B test variants for each asset.
-
-ASSET GENERATION RULES:
-1. IF CHANNEL IS DIGITAL (e.g., Website, Email, SMS, Display Ads):
-   - Headline: Attention-grabbing, platform-appropriate
-   - Body Copy: Optimized length for platform
-   - CTA: Action-oriented, clear
-   - Visual Description: Detailed description of imagery/graphics
-   - A/B Test Variants: 2-3 variations with different headlines/CTAs
-
-2. IF CHANNEL IS SOCIAL MEDIA (e.g., Facebook, Instagram, TikTok, LinkedIn):
-   - Post Caption: Platform-optimized length and style
-   - Hashtags: 5-10 relevant, trending hashtags
-   - Visual Concept: Image/video concept description
-   - Post Format: Suggest a suitable format (e.g., Carousel, Reel)
-   - Engagement Strategy: How to encourage interaction
-   - A/B Test Variants: 2-3 caption variations
-
-3. IF CHANNEL IS PHYSICAL/PRINT (e.g., Billboards, Print Ads, Direct Mail):
-   - Primary Message: Large, bold headline
-   - Supporting Copy: Concise body text
-   - Visual Layout: Description of layout and brand elements
-   - Location Strategy: Where to place for maximum impact
-   - Design Variants: 2-3 different visual approaches
-
-4. IF CHANNEL IS BROADCAST (e.g., TV, Radio, Podcast):
-   - Script: 15-second and 30-second versions
-   - Audio/Visual Elements: Description of scenes, sounds, music
-   - Voice Direction: Tone, pace, emotion
-   - Script Variants: 2 different approaches (e.g., emotional vs. informational)
+TASK:
+Generate a set of production-ready marketing assets. For each asset, create at least two A/B test variants with different creative approaches (e.g., different headlines, captions, or calls-to-action). The assets should be tailored specifically for the "${channelName}" platform, considering its best practices, formats, and user expectations.
 `;
 
     try {
@@ -523,4 +491,157 @@ ASSET GENERATION RULES:
         }
         throw new Error(`Failed to generate assets for ${channelName}. The AI model may be experiencing issues. Please try again later.`);
     }
+};
+
+export const editImageWithPrompt = async (imagePart: { inlineData: { data: string; mimeType: string; } }, prompt: string): Promise<string> => {
+    try {
+        const textPart = {
+            text: prompt,
+        };
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [imagePart, textPart],
+            },
+            config: {
+                responseModalities: [Modality.IMAGE],
+            },
+        });
+        
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+                return part.inlineData.data;
+            }
+        }
+        throw new Error("No image data found in the response from the AI model.");
+
+    } catch (error) {
+        console.error("Error calling Gemini API for image editing:", error);
+        throw new Error("Failed to edit image. The AI model may be experiencing issues. Please try again later.");
+    }
+};
+
+export const generateVideoForChannel = async (
+    campaign: Campaign, 
+    channelName: string,
+    updateProgress: (message: string) => void
+): Promise<string> => {
+    // Per guidelines, create a new instance before an API call to ensure the latest key is used.
+    const videoAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    let aspectRatio: '16:9' | '9:16' = '16:9';
+    if (['TikTok', 'Instagram', 'SMS'].some(ch => channelName.includes(ch))) {
+        aspectRatio = '9:16';
+    }
+
+    const prompt = `Create a visually stunning 15-second video ad for ${channelName}.
+    Campaign: "${campaign.name}" - ${campaign.description}.
+    Target Audience: ${campaign.audienceQuery}.
+    Key message: "${campaign.strategy.recommendations}".
+    The video should be fast-paced, eye-catching, and tailored to a mobile-first audience on ${channelName}. Avoid text overlays. The style should be modern and energetic.`;
+
+    try {
+        updateProgress("Sending request to the video model...");
+        let operation = await videoAI.models.generateVideos({
+            model: 'veo-3.1-fast-generate-preview',
+            prompt,
+            config: {
+                numberOfVideos: 1,
+                resolution: '720p',
+                aspectRatio,
+            }
+        });
+
+        updateProgress("Video generation started. This can take several minutes...");
+        while (!operation.done) {
+            await new Promise(resolve => setTimeout(resolve, 10000)); // Poll every 10 seconds
+            updateProgress("Checking video status...");
+            operation = await videoAI.operations.getVideosOperation({ operation });
+        }
+
+        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+        if (!downloadLink) {
+            throw new Error("Video generation completed, but no download link was found.");
+        }
+
+        updateProgress("Video is ready! Downloading asset...");
+        // The response.body contains the MP4 bytes. You must append an API key when fetching from the download link.
+        const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Failed to download video:", errorText);
+            throw new Error(`Failed to download the generated video. Status: ${response.status}`);
+        }
+        const videoBlob = await response.blob();
+        updateProgress("Download complete.");
+        return URL.createObjectURL(videoBlob);
+
+    } catch (error) {
+        console.error(`Error generating video for ${channelName}:`, error);
+        // Rethrow with a more user-friendly message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to generate video for ${channelName}. ${errorMessage}`);
+    }
+};
+
+// --- Live API Transcription Functions ---
+
+function encode(bytes: Uint8Array) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+export function createBlob(data: Float32Array): Blob {
+  const l = data.length;
+  const int16 = new Int16Array(l);
+  for (let i = 0; i < l; i++) {
+    int16[i] = data[i] * 32768;
+  }
+  return {
+    data: encode(new Uint8Array(int16.buffer)),
+    mimeType: 'audio/pcm;rate=16000',
+  };
+}
+
+// @google/genai Coding Guidelines: Do not use `LiveSession` as an explicit return type. The type should be inferred.
+export const startTranscriptionSession = (
+    onTranscriptionUpdate: (transcription: string, isFinal: boolean) => void
+) => {
+    let currentTranscription = '';
+    
+    const liveAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    const sessionPromise = liveAI.live.connect({
+        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        callbacks: {
+            onopen: () => console.debug('Live session opened'),
+            onmessage: (message: LiveServerMessage) => {
+                if (message.serverContent?.inputTranscription) {
+                    const text = message.serverContent.inputTranscription.text;
+                    currentTranscription += text;
+                    onTranscriptionUpdate(currentTranscription, false);
+                }
+                if (message.serverContent?.turnComplete) {
+                    onTranscriptionUpdate(currentTranscription, true);
+                    currentTranscription = '';
+                }
+            },
+            onerror: (e: ErrorEvent) => {
+                console.error('Live session error:', e);
+            },
+            onclose: (e: CloseEvent) => {
+                console.debug('Live session closed');
+            },
+        },
+        config: {
+            inputAudioTranscription: {},
+            responseModalities: [Modality.AUDIO],
+        },
+    });
+
+    return sessionPromise;
 };

@@ -7,7 +7,11 @@ import { GovernanceDashboard } from './GovernanceDashboard';
 import { ChannelSelectionDashboard } from './ChannelSelectionDashboard';
 import { AssetGenerationController } from './AssetGenerationController';
 import { ChannelAssetCard } from './ChannelAssetCard';
-import { AssetGenerationProgress } from '../App';
+import { AssetGenerationProgress, VideoAssetState } from '../App';
+import { VideoGenerationController } from './VideoGenerationController';
+import { VideoAssetCard } from './VideoAssetCard';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
+
 
 interface JourneyCanvasProps {
   campaign: Campaign | null;
@@ -18,6 +22,9 @@ interface JourneyCanvasProps {
   onGenerateForAll: () => void;
   onResetAssets: () => void;
   recommendedChannels: (Channel & { category: string })[];
+  videoAssets: Record<string, VideoAssetState>;
+  onGenerateVideoForChannel: (channelName: string) => void;
+  isApiKeySelected: boolean;
 }
 
 const BranchConnector: React.FC<{ label: string }> = ({ label }) => {
@@ -130,6 +137,9 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     onGenerateForAll,
     onResetAssets,
     recommendedChannels,
+    videoAssets,
+    onGenerateVideoForChannel,
+    isApiKeySelected,
 }) => {
   if (isLoading) {
     return (
@@ -173,6 +183,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
   const firstNodeId = campaign.nodes.find(n => n.id === 1) ? 1 : (campaign.nodes[0]?.id || null);
   const generatedAssetChannels = Object.keys(campaign.channelAssets || {});
+  const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]) => state.status === 'done' && state.url);
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 md:p-8">
@@ -191,6 +202,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
       
       {campaign.strategy && <PrescriptiveStrategy strategy={campaign.strategy} />}
       <AudienceSegment campaign={campaign} />
+      {campaign && <AnalyticsDashboard kpis={campaign.kpis} />}
       {campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
       {campaign.channelSelection && <ChannelSelectionDashboard selection={campaign.channelSelection} />}
 
@@ -201,16 +213,34 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
         onReset={onResetAssets}
         recommendedChannels={recommendedChannels}
       />
+      
+      <VideoGenerationController 
+        recommendedChannels={recommendedChannels}
+        videoAssets={videoAssets}
+        onGenerateVideo={onGenerateVideoForChannel}
+        isApiKeySelected={isApiKeySelected}
+      />
 
       {generatedAssetChannels.length > 0 && (
         <div className="mt-8">
-            <h3 className="font-semibold text-lg text-white mb-4">Generated Assets</h3>
+            <h3 className="font-semibold text-lg text-white mb-4">Generated Creative Assets</h3>
             <div className="space-y-6">
                 {generatedAssetChannels.map(channelName => (
                     <ChannelAssetCard
                         key={channelName}
                         result={campaign.channelAssets![channelName]}
                     />
+                ))}
+            </div>
+        </div>
+      )}
+
+      {generatedVideoAssets.length > 0 && (
+        <div className="mt-8">
+            <h3 className="font-semibold text-lg text-white mb-4">Generated Video Assets</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {generatedVideoAssets.map(([channelName, videoState]) => (
+                   <VideoAssetCard key={channelName} channelName={channelName} videoUrl={videoState.url!} />
                 ))}
             </div>
         </div>
