@@ -389,7 +389,7 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       contents: prompt,
       config: {
         systemInstruction,
@@ -439,12 +439,15 @@ export const generateAssetsForChannel = async (campaign: Campaign, channelName: 
     const systemInstruction = `You are an AI assistant that ONLY outputs a single, valid JSON object. Your entire response must be a JSON object, without any surrounding text or markdown.
 
 **CRITICAL RULE: ESCAPING QUOTES**
-You MUST escape any double quote (") character inside a JSON string value with a backslash (\\). This is the most common reason for errors.
-
+You MUST escape any double quote (") character inside a JSON string value with a backslash (\\).
 - **VALID:** { "example": "He said, \\"Hello world!\\"" }
 - **INVALID:** { "example": "He said, "Hello world!"" }
+Before finalizing your response, you must review the entire JSON object and verify that every double quote within a string value is properly escaped.
 
-Before finalizing your response, you must review the entire JSON object you have generated and verify that every single double quote within a string value is properly escaped. Failure to do this will result in a failed request.
+**SCHEMA & CONTENT RULES:**
+1.  The main 'content' object for any given asset represents "Variant A" of the creative.
+2.  The 'variants' array within the 'content' object should contain "Variant B", "Variant C", etc.
+3.  **MANDATORY:** Every object inside the 'variants' array MUST contain the actual alternative content. It MUST have at least one of the following fields populated with text: 'headline', 'bodyCopy', or 'caption'. A variant object containing only an 'id' and 'reasoning' is invalid and will be rejected.
 
 **TASK:**
 Act as an expert creative director. Generate comprehensive marketing assets for the SINGLE CHANNEL specified in the user prompt, based on the provided campaign strategy, and format the output according to the provided JSON schema.`;

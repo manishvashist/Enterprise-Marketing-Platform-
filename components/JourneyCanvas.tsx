@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 // FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
 import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
 import { JourneyNode } from './JourneyNode';
@@ -43,7 +43,7 @@ const BranchConnector: React.FC<{ label: string }> = ({ label }) => {
     );
 };
 
-const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: Set<number> = new Set()): React.ReactNode => {
+const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: Set<number> = new Set(), isAnimating: boolean = false, delay: number = 0): React.ReactNode => {
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const parentNode = nodeMap.get(nodeId);
 
@@ -51,15 +51,18 @@ const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: S
 
     renderedIds.add(parentNode.id);
 
+    const animationStyle = isAnimating ? { animationDelay: `${delay}ms` } : {};
+    const animationClass = isAnimating ? 'animate-journey-element' : '';
+
     return (
-        <div key={parentNode.id} className="relative">
+        <div key={parentNode.id} className={`relative ${animationClass}`} style={animationStyle}>
             <JourneyNode node={parentNode} />
             {parentNode.children.length > 0 && (
                  <div className="pl-8 relative before:absolute before:left-4 before:top-0 before:h-full before:border-l-2 before:border-dashed before:border-gray-700">
                     {parentNode.children.map((branch: Branch, index: number) => (
                         <div key={`${parentNode.id}-${branch.nodeId}-${index}`} className="relative pt-4">
                             <BranchConnector label={branch.label} />
-                            {renderTree(nodes, branch.nodeId, renderedIds)}
+                            {renderTree(nodes, branch.nodeId, renderedIds, isAnimating, delay + 150)}
                         </div>
                     ))}
                 </div>
@@ -69,7 +72,7 @@ const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: S
 };
 
 const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strategy }) => (
-    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 border border-indigo-500/30">
+    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 border border-indigo-500/30 no-print">
         <div className="flex items-start space-x-4">
             <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center">
                 <SparklesIcon className="w-5 h-5 text-white" />
@@ -106,7 +109,7 @@ const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strate
 
 
 const AudienceSegment: React.FC<{ campaign: Campaign }> = ({ campaign }) => (
-    <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 no-print">
         <div className="flex items-start space-x-4">
             <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
                 <UserGroupIcon className="w-5 h-5 text-white" />
@@ -148,6 +151,19 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     channelConnections,
     onSaveCampaign,
 }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation only when the campaign object itself changes, not just its internal state
+    if (campaign) {
+      setIsAnimating(true);
+      // Estimate animation duration based on the number of nodes to avoid re-triggering mid-animation
+      const animationDuration = (campaign.nodes.length * 150) + 500;
+      const timer = setTimeout(() => setIsAnimating(false), animationDuration);
+      return () => clearTimeout(timer);
+    }
+  }, [campaign?.id]); // Depend on a stable property like ID
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/50 rounded-lg p-8 border-2 border-dashed border-gray-700">
@@ -188,6 +204,24 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     );
   }
 
+  const handleDownloadJson = () => {
+    if (!campaign) return;
+    const jsonString = JSON.stringify(campaign, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${campaign.name.replace(/\s+/g, '_').toLowerCase()}_journey.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
   const firstNodeId = campaign.nodes.find(n => n.id === 1) ? 1 : (campaign.nodes[0]?.id || null);
   const generatedAssetChannels = Object.keys(campaign.channelAssets || {});
   const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]) => state.status === 'done' && state.url);
@@ -196,21 +230,90 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     ? `Last saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}` 
     : 'Unsaved';
 
+  const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  );
+
   return (
     <div className="bg-gray-800 rounded-lg p-6 md:p-8">
-      <div className="border-b border-gray-700 pb-4 mb-6">
+      <style>{`
+        @keyframes journey-element-fade-in {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-journey-element {
+          animation: journey-element-fade-in 0.5s ease-out forwards;
+          opacity: 0;
+        }
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #journey-print-area, #journey-print-area * {
+            visibility: visible;
+          }
+          #journey-print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: #fff !important;
+            color: #000 !important;
+          }
+          #journey-print-area [class*="bg-"] {
+              background-color: #f3f4f6 !important;
+              color: #000 !important;
+              border-color: #d1d5db !important;
+          }
+           #journey-print-area .rounded-full[class*="bg-"] {
+              background-color: #fff !important;
+              border: 2px solid #6b7280;
+          }
+          #journey-print-area .pl-8.relative::before {
+              border-color: #d1d5db !important;
+          }
+           #journey-print-area svg {
+              color: #000 !important;
+          }
+           #journey-print-area [class*="text-"] {
+              color: #000 !important;
+           }
+        }
+      `}</style>
+      <div className="border-b border-gray-700 pb-4 mb-6 no-print">
         <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
               <p className="text-gray-400 mt-1">{campaign.description}</p>
             </div>
             <div className="flex flex-col items-end flex-shrink-0 ml-4">
-                 <button
-                    onClick={onSaveCampaign}
-                    className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all flex items-center justify-center text-sm"
-                 >
-                     {campaign.id ? 'Update Campaign' : 'Save Campaign'}
-                 </button>
+                 <div className="flex items-center gap-2">
+                     <button
+                        onClick={handleDownloadJson}
+                        className="px-3 py-1.5 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-500 transition-all flex items-center justify-center text-xs"
+                        aria-label="Download journey as JSON"
+                    >
+                        <DownloadIcon />
+                        JSON
+                    </button>
+                    <button
+                        onClick={handleDownloadPdf}
+                        className="px-3 py-1.5 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-500 transition-all flex items-center justify-center text-xs"
+                        aria-label="Download journey as PDF"
+                    >
+                        <DownloadIcon />
+                        PDF
+                    </button>
+                    <button
+                        onClick={onSaveCampaign}
+                        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all flex items-center justify-center text-sm"
+                    >
+                        {campaign.id ? 'Update Campaign' : 'Save Campaign'}
+                    </button>
+                 </div>
                  <p className="text-xs text-gray-500 mt-2">{lastSaved}</p>
             </div>
         </div>
@@ -226,61 +329,65 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
       
       {campaign.strategy && <PrescriptiveStrategy strategy={campaign.strategy} />}
       <AudienceSegment campaign={campaign} />
-      {campaign && <AnalyticsDashboard kpis={campaign.kpis} />}
-      {campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
-      {campaign.channelSelection && <ChannelSelectionDashboard selection={campaign.channelSelection} />}
+      <div className="no-print">
+        {campaign && <AnalyticsDashboard kpis={campaign.kpis} />}
+        {campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
+        {campaign.channelSelection && <ChannelSelectionDashboard selection={campaign.channelSelection} />}
 
-      <AssetGenerationController
-        progress={assetGenerationProgress}
-        onGenerateForChannel={onGenerateForChannel}
-        onGenerateForAll={onGenerateForAll}
-        onReset={onResetAssets}
-        recommendedChannels={recommendedChannels}
-      />
-      
-      <VideoGenerationController 
-        recommendedChannels={recommendedChannels}
-        videoAssets={videoAssets}
-        onGenerateVideo={onGenerateVideoForChannel}
-        isApiKeySelected={isApiKeySelected}
-      />
-
-      {generatedAssetChannels.length > 0 && (
-        <div className="mt-8">
-            <h3 className="font-semibold text-lg text-white mb-4">Generated Creative Assets</h3>
-            <div className="space-y-6">
-                {generatedAssetChannels.map(channelName => (
-                    <ChannelAssetCard
-                        key={channelName}
-                        result={campaign.channelAssets![channelName]}
-                    />
-                ))}
-            </div>
-        </div>
-      )}
-
-      {generatedVideoAssets.length > 0 && (
-        <div className="mt-8">
-            <h3 className="font-semibold text-lg text-white mb-4">Generated Video Assets</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {generatedVideoAssets.map(([channelName, videoState]) => (
-                   <VideoAssetCard key={channelName} channelName={channelName} videoUrl={videoState.url!} />
-                ))}
-            </div>
-        </div>
-      )}
-
-      {hasGeneratedAssets && (
-         <CampaignExecutionManager
-            campaign={campaign}
-            connections={channelConnections}
+        <AssetGenerationController
+            progress={assetGenerationProgress}
+            onGenerateForChannel={onGenerateForChannel}
+            onGenerateForAll={onGenerateForAll}
+            onReset={onResetAssets}
             recommendedChannels={recommendedChannels}
         />
-      )}
+        
+        <VideoGenerationController 
+            recommendedChannels={recommendedChannels}
+            videoAssets={videoAssets}
+            onGenerateVideo={onGenerateVideoForChannel}
+            isApiKeySelected={isApiKeySelected}
+        />
 
-      <h3 className="font-semibold text-lg text-white mb-4 mt-8">Customer Journey Flow</h3>
-      <div>
-        {firstNodeId ? renderTree(campaign.nodes, firstNodeId) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
+        {generatedAssetChannels.length > 0 && (
+            <div className="mt-8">
+                <h3 className="font-semibold text-lg text-white mb-4">Generated Creative Assets</h3>
+                <div className="space-y-6">
+                    {generatedAssetChannels.map(channelName => (
+                        <ChannelAssetCard
+                            key={channelName}
+                            result={campaign.channelAssets![channelName]}
+                        />
+                    ))}
+                </div>
+            </div>
+        )}
+
+        {generatedVideoAssets.length > 0 && (
+            <div className="mt-8">
+                <h3 className="font-semibold text-lg text-white mb-4">Generated Video Assets</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {generatedVideoAssets.map(([channelName, videoState]) => (
+                    <VideoAssetCard key={channelName} channelName={channelName} videoUrl={videoState.url!} />
+                    ))}
+                </div>
+            </div>
+        )}
+
+        {hasGeneratedAssets && (
+            <CampaignExecutionManager
+                campaign={campaign}
+                connections={channelConnections}
+                recommendedChannels={recommendedChannels}
+            />
+        )}
+      </div>
+
+      <div id="journey-print-area">
+        <h3 className="font-semibold text-lg text-white mb-4 mt-8">Customer Journey Flow</h3>
+        <div>
+            {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
+        </div>
       </div>
     </div>
   );
