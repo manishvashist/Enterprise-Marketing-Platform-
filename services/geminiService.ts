@@ -1,6 +1,8 @@
+
 // @google/genai Coding Guidelines: Do not import `LiveSession` as an explicit return type.
 import { GoogleGenAI, Type, Modality, LiveServerMessage, Blob } from '@google/genai';
-import { Campaign, NodeType, ChannelAssetGenerationResult } from '../types';
+import { Campaign, NodeType, ChannelAssetGenerationResult, User } from '../types';
+import { subscriptionService } from './subscriptionService';
 
 // Per coding guidelines, API key is assumed to be available in process.env.API_KEY.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -338,7 +340,7 @@ const channelAssetGenerationSchema = {
 };
 
 
-export const generateCampaignJourney = async (prompt: string): Promise<Campaign> => {
+export const generateCampaignJourney = async (prompt: string, user: User): Promise<Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>> => {
   const systemInstruction = `You are a world-class AI marketing platform, acting as an expert strategist and media planner. Your task is to transform a user's campaign request into a single, detailed, structured JSON object.
 
 The user provides a 'Campaign Goal' and a 'Target Audience'.
@@ -388,6 +390,13 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
 *   Return a single, valid JSON object matching the schema. Do not wrap it in markdown.`;
 
   try {
+    const canGenerateCheck = await subscriptionService.canGenerateCampaign(user.id);
+    if (!canGenerateCheck.canGenerate) {
+        if(canGenerateCheck.reason === 'quota_exceeded') throw new Error("Campaign quota exceeded. Please upgrade or wait for your quota to reset.");
+        if(canGenerateCheck.reason === 'trial_expired') throw new Error("Your trial has expired. Please subscribe to continue generating campaigns.");
+        throw new Error("You do not have permission to generate a new campaign.");
+    }
+    
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-pro',
       contents: prompt,
@@ -424,12 +433,16 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
     }
 
 
-    return parsedCampaign as Campaign;
+    return parsedCampaign;
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error && error.message.includes('json')) {
         throw new Error("Failed to generate campaign. The AI model returned an invalid structure. Please try rephrasing your request.");
+    }
+    // Pass through specific quota errors
+    if(error instanceof Error && (error.message.includes('quota') || error.message.includes('trial'))) {
+      throw error;
     }
     throw new Error("Failed to generate campaign. The AI model may be experiencing issues. Please try again later.");
   }

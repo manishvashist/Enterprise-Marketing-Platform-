@@ -179,10 +179,12 @@ export interface ChannelAssetGenerationResult {
 
 
 export interface Campaign {
-  id?: string; // Optional: will not exist on a newly generated campaign
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  id: string; // Now mandatory after creation
+  userId: string;
+  subscriptionId?: string | null;
+  isTrialCampaign: boolean;
+  createdAt: string;
+  updatedAt: string;
   name: string;
   description: string;
   audienceQuery: string;
@@ -233,6 +235,7 @@ export interface AvailableAdAccount {
   currency: string;
   balance: number;
   spendCap: number;
+  totalSpend?: number; // Lifetime spend on the ad account
 }
 export interface AvailableAccount {
   accountId: string;
@@ -240,7 +243,12 @@ export interface AvailableAccount {
   accountType: 'page' | 'profile' | 'ad_account' | 'channel' | 'list';
   followers?: number;
   isActive: boolean;
-  adAccounts?: AvailableAdAccount[];
+  adAccounts?: AvailableAdAccount[]; // For pages that might have associated ad accounts
+  // Direct properties for when the account itself is an ad_account
+  currency?: string;
+  balance?: number;
+  spendCap?: number;
+  totalSpend?: number;
 }
 
 export type ExecutionStatus = 'pending' | 'scheduled' | 'publishing' | 'published' | 'failed';
@@ -274,7 +282,53 @@ export interface VideoAssetState {
   progressMessage?: string;
 }
 
-// --- NEW TYPES for User Authentication ---
+// --- NEW TYPES for Subscriptions & Billing ---
+export type AccountStatus = 'trial' | 'active' | 'expired' | 'cancelled';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'past_due';
+export type PlanCode = 'pro' | 'pro_plus' | 'elite';
+export type BillingType = 'monthly' | 'annual';
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  planCode: PlanCode;
+  monthlyPrice: number;
+  billingCycleMonths: number;
+  campaignQuota: number;
+  quotaPeriodDays: number;
+  annualPrice: number;
+  annualDiscountPercent: number;
+  isActive: boolean;
+}
+
+export interface UserSubscription {
+  id: string;
+  userId: string;
+  planId: string;
+  plan?: SubscriptionPlan; // populated for convenience
+  billingType: BillingType;
+  status: SubscriptionStatus;
+  startDate: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  nextBillingDate: string | null;
+  cancellationDate: string | null;
+  campaignsUsedCurrentPeriod: number;
+  campaignQuota: number;
+  quotaResetDate: string;
+  autoRenew: boolean;
+}
+
+export interface UsageInfo {
+  canGenerate: boolean;
+  reason: 'trial' | 'subscription' | 'quota_exceeded' | 'subscription_required' | 'trial_expired';
+  remaining: number;
+  limit: number;
+  daysUntilReset?: number;
+  trialDaysRemaining?: number;
+}
+
+// --- UPDATED User type ---
 export type UserRole = 'Admin' | 'Manager' | 'User';
 
 export interface User {
@@ -285,4 +339,10 @@ export interface User {
   role: UserRole;
   createdAt: string;
   channelConnections: Record<string, ChannelConnection>;
+  // New subscription fields
+  accountStatus: AccountStatus;
+  trialStartDate: string | null;
+  trialEndDate: string | null;
+  trialCampaignsUsed: number;
+  activeSubscription: UserSubscription | null;
 }

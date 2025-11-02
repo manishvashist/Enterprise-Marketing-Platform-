@@ -1,11 +1,14 @@
+
 import React from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
 import { User } from '../types';
 
 // FIX: Use a specific union type for view and setView to match the state type in MainApp and fix type incompatibility.
+type AppView = 'campaign' | 'editor' | 'connections' | 'admin' | 'billing';
+
 interface HeaderProps {
-  currentView: 'campaign' | 'editor' | 'connections' | 'admin';
-  setView: (view: 'campaign' | 'editor' | 'connections' | 'admin') => void;
+  currentView: AppView;
+  setView: (view: AppView) => void;
   user: User;
   onLogout: () => void;
 }
@@ -51,6 +54,13 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLo
                   aria-current={currentView === 'connections' ? 'page' : undefined}
                 >
                   Connections
+                </button>
+                <button 
+                  onClick={() => setView('billing')}
+                  className={`${navButtonStyle} ${currentView === 'billing' ? activeStyle : inactiveStyle}`}
+                  aria-current={currentView === 'billing' ? 'page' : undefined}
+                >
+                  Billing & Usage
                 </button>
                 {user.role === 'Admin' && (
                    <button 

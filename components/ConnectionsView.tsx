@@ -16,6 +16,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ user, onUserUp
   const [selectedChannel, setSelectedChannel] = useState<ChannelConnection | null>(null);
 
   const handleConnectClick = (channel: ChannelConnection) => {
+    if (user.role === 'User') return;
     setSelectedChannel(channel);
     setAuthStep('auth');
   };
@@ -53,6 +54,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ user, onUserUp
   };
 
   const handleDisconnect = async (channelId: string) => {
+    if (user.role === 'User') return;
     const updatedUser = await authService.updateUserConnection(user.id, channelId, null);
     if (updatedUser) onUserUpdate(updatedUser);
   };
@@ -87,6 +89,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ user, onUserUp
                 <ChannelConnectionCard 
                   key={channel.channelId}
                   channel={channel}
+                  user={user}
                   onConnect={() => handleConnectClick(channel)}
                   onDisconnect={() => handleDisconnect(channel.channelId)}
                 />

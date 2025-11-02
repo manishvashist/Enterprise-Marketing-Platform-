@@ -1,14 +1,18 @@
-import { User, Campaign } from '../types';
+
+import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription, BillingType } from '../types';
+import { initialSubscriptionPlans } from '../data/plans';
 
 // This is a simulated asynchronous database service that uses localStorage.
 // It mimics network latency with a short delay.
 
-const DB_KEY = 'EMP_DATABASE';
-const SIMULATED_LATENCY_MS = 150;
+const DB_KEY = 'EMP_DATABASE_V2';
+const SIMULATED_LATENCY_MS = 100;
 
 interface Database {
     users: Record<string, User>; // key is email
     campaigns: Record<string, Campaign>; // key is campaignId
+    subscription_plans: Record<string, SubscriptionPlan>;
+    user_subscriptions: Record<string, UserSubscription>;
 }
 
 // In a real app, this would be a secure hashing function on the server.
@@ -18,13 +22,27 @@ const _getDb = (): Database => {
     try {
         const dbString = localStorage.getItem(DB_KEY);
         if (dbString) {
-            return JSON.parse(dbString);
+            const parsed = JSON.parse(dbString);
+            // Ensure all tables exist
+            return {
+                users: parsed.users || {},
+                campaigns: parsed.campaigns || {},
+                subscription_plans: parsed.subscription_plans || {},
+                user_subscriptions: parsed.user_subscriptions || {}
+            };
         }
     } catch (e) {
         console.error("Failed to parse DB from localStorage", e);
     }
     // Return a default structure if DB doesn't exist or is corrupt
-    return { users: {}, campaigns: {} };
+    const defaultDb: Database = { 
+        users: {}, 
+        campaigns: {},
+        subscription_plans: initialSubscriptionPlans,
+        user_subscriptions: {},
+    };
+    _saveDb(defaultDb);
+    return defaultDb;
 };
 
 const _saveDb = (db: Database): void => {
@@ -59,14 +77,23 @@ export const databaseService = {
             throw new Error('User already exists.');
         }
 
+        const now = new Date();
+        const trialEndDate = new Date(now);
+        trialEndDate.setDate(now.getDate() + 7);
+
         const newUser: User = {
             id: `user_${Date.now()}`,
             fullName: data.fullName,
             email: normalizedEmail,
             passwordHash: mockHash(data.password),
             role: data.role,
-            createdAt: new Date().toISOString(),
+            createdAt: now.toISOString(),
             channelConnections: data.channelConnections,
+            accountStatus: 'trial',
+            trialStartDate: now.toISOString(),
+            trialEndDate: trialEndDate.toISOString(),
+            trialCampaignsUsed: 0,
+            activeSubscription: null,
         };
 
         db.users[normalizedEmail] = newUser;
@@ -109,10 +136,10 @@ export const databaseService = {
             _saveDb(db);
             return updatedCampaign;
         } else {
-            // Create new campaign
+            // This path should ideally not be hit if we create campaign on generation
             const newCampaign: Campaign = {
                 ...campaignData,
-                id: `camp_${Date.now()}`,
+                id: campaignData.id || `camp_${Date.now()}`,
                 userId: userId,
                 createdAt: now,
                 updatedAt: now,
@@ -121,6 +148,21 @@ export const databaseService = {
             _saveDb(db);
             return newCampaign;
         }
+    },
+     async createCampaign(campaignData: Omit<Campaign, 'id'>): Promise<Campaign> {
+        await _simulateLatency();
+        const db = _getDb();
+        const now = new Date().toISOString();
+        
+        const newCampaign: Campaign = {
+            ...campaignData,
+            id: `camp_${Date.now()}`,
+            createdAt: now,
+            updatedAt: now,
+        };
+        db.campaigns[newCampaign.id] = newCampaign;
+        _saveDb(db);
+        return newCampaign;
     },
     
     async deleteCampaign(campaignId: string): Promise<void> {
@@ -132,4 +174,49 @@ export const databaseService = {
         delete db.campaigns[campaignId];
         _saveDb(db);
     },
+
+    // --- Subscription Methods ---
+    async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+        await _simulateLatency();
+        const db = _getDb();
+        return Object.values(db.subscription_plans).filter(p => p.isActive);
+    },
+
+    async findPlanByCode(planCode: PlanCode): Promise<SubscriptionPlan | null> {
+        await _simulateLatency();
+        const db = _getDb();
+        return Object.values(db.subscription_plans).find(p => p.planCode === planCode) || null;
+    },
+
+    async getActiveSubscriptionForUser(userId: string): Promise<UserSubscription | null> {
+        await _simulateLatency();
+        const db = _getDb();
+        const subscriptions = Object.values(db.user_subscriptions)
+            .filter(s => s.userId === userId && s.status === 'active')
+            .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+        return subscriptions[0] || null;
+    },
+
+    async createSubscription(subData: Omit<UserSubscription, 'id' | 'plan'>): Promise<UserSubscription> {
+        await _simulateLatency();
+        const db = _getDb();
+        const newSub: UserSubscription = {
+            ...subData,
+            id: `sub_${Date.now()}`,
+        };
+        db.user_subscriptions[newSub.id] = newSub;
+        _saveDb(db);
+        return newSub;
+    },
+
+    async updateSubscription(updatedSub: UserSubscription): Promise<UserSubscription> {
+        await _simulateLatency();
+        const db = _getDb();
+        if (!db.user_subscriptions[updatedSub.id]) {
+            throw new Error("Subscription not found for update.");
+        }
+        db.user_subscriptions[updatedSub.id] = updatedSub;
+        _saveDb(db);
+        return updatedSub;
+    }
 };

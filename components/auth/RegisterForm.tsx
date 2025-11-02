@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { authService } from '../../services/authService';
 import { UserRole } from '../../types';
@@ -137,7 +138,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
             >
                 <option value="User">User</option>
                 <option value="Manager">Manager</option>
-                <option value="Admin">Admin</option>
             </select>
           </div>
         </div>

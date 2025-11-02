@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { CampaignInput } from './CampaignInput';
@@ -5,12 +6,15 @@ import { JourneyCanvas } from './JourneyCanvas';
 import { ImageEditor } from './ImageEditor';
 import { generateCampaignJourney, generateAssetsForChannel, generateVideoForChannel, startTranscriptionSession, createBlob } from '../services/geminiService';
 import { databaseService } from '../services/databaseService';
-// FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to resolve circular dependency.
-import { Campaign, User, AssetGenerationProgress, VideoAssetState } from '../types';
+import { subscriptionService } from '../services/subscriptionService';
+import { Campaign, User, AssetGenerationProgress, VideoAssetState, UsageInfo } from '../types';
 import { ConnectionsView } from './ConnectionsView';
 import { LoadCampaignModal } from './LoadCampaignModal';
+import { BillingView } from './billing/BillingView';
+import { TrialBanner } from './TrialBanner';
 
 type LiveSession = Awaited<ReturnType<typeof startTranscriptionSession>>;
+type AppView = 'campaign' | 'editor' | 'connections' | 'admin' | 'billing';
 
 interface MainAppProps {
     user: User;
@@ -18,8 +22,26 @@ interface MainAppProps {
     onUserUpdate: (user: User) => void;
 }
 
+const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setView }) => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/50 rounded-lg p-8 border-2 border-dashed border-gray-700">
+        <div className="text-center">
+             <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="mt-4 text-xl font-semibold text-white">Subscription Required</h3>
+            <p className="mt-2 text-gray-400">Your trial has ended. Please subscribe to continue using the platform.</p>
+            <button
+                onClick={() => setView('billing')}
+                className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all"
+            >
+                View Plans
+            </button>
+        </div>
+    </div>
+);
+
 export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }) => {
-  const [view, setView] = useState<'campaign' | 'editor' | 'connections' | 'admin'>('campaign');
+  const [view, setView] = useState<AppView>('campaign');
   const [goalPrompt, setGoalPrompt] = useState<string>('');
   const [audiencePrompt, setAudiencePrompt] = useState<string>('');
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -30,6 +52,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
   const [recordingField, setRecordingField] = useState<'goal' | 'audience' | null>(null);
   const [savedCampaigns, setSavedCampaigns] = useState<Campaign[]>([]);
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
   
   const liveSessionRef = useRef<LiveSession | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -55,7 +78,15 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
   }, []);
 
   useEffect(() => {
-    if (user) {
+    const checkUsage = async () => {
+        const info = await subscriptionService.getUsageInfo(user.id);
+        setUsageInfo(info);
+    };
+    checkUsage();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && user.role !== 'User') {
         const fetchCampaigns = async () => {
             const campaigns = await databaseService.getCampaignsForUser(user.id);
             setSavedCampaigns(campaigns);
@@ -86,10 +117,15 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
     const fullPrompt = `Campaign Goal: ${goalPrompt}\nTarget Audience: ${audiencePrompt}`;
 
     try {
-      const generatedCampaign = await generateCampaignJourney(fullPrompt);
-      setCampaign(generatedCampaign);
+      const generatedCampaignData = await generateCampaignJourney(fullPrompt, user);
+      
+      const newCampaign = await subscriptionService.createCampaignUsage(user.id, generatedCampaignData);
+
+      setCampaign(newCampaign);
+      onUserUpdate(await databaseService.findUserById(user.id) as User);
+
       // Initialize progress state for recommended channels
-      const recommended = generatedCampaign.channelSelection?.channelCategories.flatMap(cat => cat.channels.filter(ch => ch.isRecommended)) || [];
+      const recommended = newCampaign.channelSelection?.channelCategories.flatMap(cat => cat.channels.filter(ch => ch.isRecommended)) || [];
       setAssetGenerationProgress(prev => ({
         ...prev,
         totalChannels: recommended.length,
@@ -104,10 +140,10 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
     } finally {
       setIsLoading(false);
     }
-  }, [goalPrompt, audiencePrompt]);
+  }, [goalPrompt, audiencePrompt, user, onUserUpdate]);
 
     const handleSaveCampaign = useCallback(async () => {
-    if (!campaign || !user) return;
+    if (!campaign || !user || user.role === 'User' || campaign.isTrialCampaign) return;
     try {
         const saved = await databaseService.saveCampaign(user.id, campaign);
         setCampaign(saved);
@@ -128,7 +164,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
   }, []);
 
   const handleDeleteCampaign = useCallback(async (campaignId: string) => {
-    if (!user) return;
+    if (!user || user.role === 'User') return;
     try {
         await databaseService.deleteCampaign(campaignId);
         if (campaign?.id === campaignId) {
@@ -343,13 +379,19 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
     };
   }, [stopRecording]);
 
+  const isAccessBlocked = user.accountStatus === 'expired';
+
   const renderCurrentView = () => {
+    if (isAccessBlocked && view !== 'billing') {
+        return <UpgradeRequired setView={setView} />;
+    }
     switch (view) {
         case 'campaign':
             return (
                 <>
                     <div className="w-full max-w-4xl mx-auto">
                         <CampaignInput
+                            user={user}
                             goalPrompt={goalPrompt}
                             setGoalPrompt={setGoalPrompt}
                             audiencePrompt={audiencePrompt}
@@ -359,6 +401,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
                             recordingField={recordingField}
                             onToggleRecording={handleToggleRecording}
                             onToggleLoadModal={() => setIsLoadModalOpen(prev => !prev)}
+                            usageInfo={usageInfo}
                         />
                     </div>
                     <div className="flex-grow mt-8">
@@ -380,6 +423,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
                         />
                     </div>
                     <LoadCampaignModal
+                        user={user}
                         isOpen={isLoadModalOpen}
                         onClose={() => setIsLoadModalOpen(false)}
                         campaigns={savedCampaigns}
@@ -395,6 +439,8 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
                       user={user}
                       onUserUpdate={onUserUpdate}
                     />;
+        case 'billing':
+            return <BillingView user={user} onSubscriptionChange={onUserUpdate} />;
         case 'admin':
             return user.role === 'Admin' ? <div><h1 className="text-white text-2xl">Admin Dashboard</h1><p className="text-gray-400">User management and system settings will be here.</p></div> : null;
         default:
@@ -406,6 +452,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
       <Header currentView={view} setView={setView} user={user} onLogout={onLogout} />
+       {user.accountStatus === 'trial' && usageInfo && <TrialBanner usageInfo={usageInfo} setView={setView} />}
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col">
         {renderCurrentView()}
       </main>

@@ -89,12 +89,46 @@ export const initialChannelConnections: Record<string, ChannelConnection> = {
 
 export const availableAccounts: Record<string, AvailableAccount[]> = {
     facebook: [
-        { accountId: "fb_page_101", accountName: "Quantum Innovations Inc.", accountType: "page", followers: 125032, isActive: true },
+        { 
+            accountId: "fb_page_101", 
+            accountName: "Quantum Innovations Inc.", 
+            accountType: "page", 
+            followers: 125032, 
+            isActive: true,
+            adAccounts: [
+                {
+                    adAccountId: 'fb_ad_act_111',
+                    adAccountName: 'QI - Main Ad Account',
+                    currency: 'USD',
+                    balance: 1500.50,
+                    spendCap: 10000,
+                    totalSpend: 25430.75,
+                }
+            ]
+        },
         { accountId: "fb_page_102", accountName: "Project Nebula Showcase", accountType: "page", followers: 4823, isActive: true },
     ],
     google_ads: [
-        { accountId: "g_ads_201", accountName: "Main Ad Account (USD)", accountType: "ad_account", isActive: true },
-        { accountId: "g_ads_202", accountName: "International Campaigns (EUR)", accountType: "ad_account", isActive: true },
+        { 
+            accountId: "g_ads_201", 
+            accountName: "Main Ad Account (USD)", 
+            accountType: "ad_account", 
+            isActive: true,
+            currency: 'USD',
+            balance: 5230.10,
+            spendCap: 25000,
+            totalSpend: 150234.98,
+        },
+        { 
+            accountId: "g_ads_202", 
+            accountName: "International Campaigns (EUR)", 
+            accountType: "ad_account", 
+            isActive: true,
+            currency: 'EUR',
+            balance: 890.45,
+            spendCap: 5000,
+            totalSpend: 45012.20,
+        },
     ],
     mailchimp: [
         { accountId: "mc_list_301", accountName: "Newsletter Subscribers", accountType: "list", followers: 89450, isActive: true },

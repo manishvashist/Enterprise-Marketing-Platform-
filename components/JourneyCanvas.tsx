@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 // FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
 import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
@@ -12,6 +13,7 @@ import { VideoGenerationController } from './VideoGenerationController';
 import { VideoAssetCard } from './VideoAssetCard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { CampaignExecutionManager } from './CampaignExecutionManager';
+import { ConfirmationModal } from './ConfirmationModal';
 
 
 interface JourneyCanvasProps {
@@ -152,6 +154,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     onSaveCampaign,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [downloadType, setDownloadType] = useState<'json' | 'pdf' | null>(null);
 
   useEffect(() => {
     // Trigger animation only when the campaign object itself changes, not just its internal state
@@ -205,30 +209,58 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
   }
 
   const handleDownloadJson = () => {
-    if (!campaign) return;
-    const jsonString = JSON.stringify(campaign, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${campaign.name.replace(/\s+/g, '_').toLowerCase()}_journey.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setDownloadType('json');
+    setIsConfirmModalOpen(true);
   };
 
   const handleDownloadPdf = () => {
-    window.print();
+    setDownloadType('pdf');
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmDownload = () => {
+    if (!campaign) return;
+
+    if (downloadType === 'json') {
+        const jsonString = JSON.stringify(campaign, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${campaign.name.replace(/\s+/g, '_').toLowerCase()}_journey.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } else if (downloadType === 'pdf') {
+        window.print();
+    }
+    
+    setIsConfirmModalOpen(false);
+    setDownloadType(null);
   };
 
   const firstNodeId = campaign.nodes.find(n => n.id === 1) ? 1 : (campaign.nodes[0]?.id || null);
   const generatedAssetChannels = Object.keys(campaign.channelAssets || {});
   const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]) => state.status === 'done' && state.url);
   const hasGeneratedAssets = generatedAssetChannels.length > 0 || generatedVideoAssets.length > 0;
-  const lastSaved = campaign.updatedAt 
-    ? `Last saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}` 
-    : 'Unsaved';
+  
+  const getSaveButtonStatus = () => {
+    if (user.role === 'User') {
+      return { disabled: true, title: "You do not have permission to save campaigns." };
+    }
+    if (campaign.isTrialCampaign) {
+      return { disabled: true, title: "Trial campaigns cannot be saved. Please subscribe to save your work." };
+    }
+    return { disabled: false, title: "" };
+  }
+  const saveButtonStatus = getSaveButtonStatus();
+
+  const lastSaved = campaign.isTrialCampaign 
+    ? <span className="text-yellow-400">Trial Campaign</span>
+    : campaign.updatedAt 
+      ? `Last saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}` 
+      : 'Unsaved';
 
   const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
@@ -247,7 +279,25 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
           animation: journey-element-fade-in 0.5s ease-out forwards;
           opacity: 0;
         }
+        .print-only-header { display: none; }
         @media print {
+          body, html {
+            background-color: #fff !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-only-header {
+              display: block;
+              padding-bottom: 1rem;
+              border-bottom: 1px solid #e5e7eb;
+              margin-bottom: 1.5rem;
+          }
+          .animate-journey-element {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
           body * {
             visibility: hidden;
           }
@@ -281,8 +331,19 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
            #journey-print-area [class*="text-"] {
               color: #000 !important;
            }
+           #journey-print-area .font-bold {
+             font-weight: 700 !important;
+           }
         }
       `}</style>
+       <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleConfirmDownload}
+        title={`Confirm Download`}
+      >
+        {`Are you sure you want to download the campaign journey as a ${downloadType?.toUpperCase()} file?`}
+      </ConfirmationModal>
       <div className="border-b border-gray-700 pb-4 mb-6 no-print">
         <div className="flex justify-between items-start">
             <div>
@@ -309,7 +370,9 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
                     </button>
                     <button
                         onClick={onSaveCampaign}
-                        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all flex items-center justify-center text-sm"
+                        disabled={saveButtonStatus.disabled}
+                        title={saveButtonStatus.title}
+                        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center text-sm"
                     >
                         {campaign.id ? 'Update Campaign' : 'Save Campaign'}
                     </button>
@@ -374,7 +437,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
             </div>
         )}
 
-        {hasGeneratedAssets && (
+        {hasGeneratedAssets && user.role !== 'User' && (
             <CampaignExecutionManager
                 campaign={campaign}
                 connections={channelConnections}
@@ -384,7 +447,20 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
       </div>
 
       <div id="journey-print-area">
-        <h3 className="font-semibold text-lg text-white mb-4 mt-8">Customer Journey Flow</h3>
+        <div className="print-only-header">
+            <h2 className="text-2xl font-bold">{campaign.name}</h2>
+            <p className="mt-1">{campaign.description}</p>
+            <div className="mt-4">
+                <h4 className="font-semibold mb-2">Key Performance Indicators (KPIs):</h4>
+                <div className="flex flex-wrap gap-2">
+                    {campaign.kpis.map((kpi, index) => (
+                        <span key={index} className="bg-gray-200 text-black text-xs font-medium px-2.5 py-1 rounded-full">{kpi}</span>
+                    ))}
+                </div>
+            </div>
+        </div>
+        <h3 className="font-semibold text-lg text-white mb-4 mt-8 no-print">Customer Journey Flow</h3>
+        <h3 className="font-semibold text-lg text-black mb-4 print-only-header">Customer Journey Flow</h3>
         <div>
             {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
         </div>

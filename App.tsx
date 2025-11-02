@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { authService } from './services/authService';
+import { subscriptionService } from './services/subscriptionService';
 import { User } from './types';
 import { AuthPage } from './components/auth/AuthPage';
 import { MainApp } from './components/MainApp';
@@ -8,13 +10,19 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
 
+  const fetchUserWithSubscription = async (baseUser: User): Promise<User> => {
+    const subscription = await subscriptionService.getSubscriptionForUser(baseUser.id);
+    return { ...baseUser, activeSubscription: subscription };
+  };
+
   useEffect(() => {
     // On initial load, check if there's an active session.
     const checkSession = async () => {
       try {
         const sessionUser = await authService.getCurrentUser();
         if (sessionUser) {
-          setUser(sessionUser);
+          const fullUser = await fetchUserWithSubscription(sessionUser);
+          setUser(fullUser);
         }
       } catch (error) {
         console.error("Session check failed:", error);
@@ -27,8 +35,9 @@ const App: React.FC = () => {
     checkSession();
   }, []);
 
-  const handleLogin = useCallback((loggedInUser: User) => {
-    setUser(loggedInUser);
+  const handleLogin = useCallback(async (loggedInUser: User) => {
+    const fullUser = await fetchUserWithSubscription(loggedInUser);
+    setUser(fullUser);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -36,8 +45,9 @@ const App: React.FC = () => {
     setUser(null);
   }, []);
   
-  const handleUserUpdate = useCallback((updatedUser: User) => {
-    setUser(updatedUser);
+  const handleUserUpdate = useCallback(async (updatedUser: User) => {
+     const fullUser = await fetchUserWithSubscription(updatedUser);
+     setUser(fullUser);
   }, []);
 
   if (isLoadingSession) {

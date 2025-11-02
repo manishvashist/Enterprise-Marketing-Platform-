@@ -1,7 +1,10 @@
+
 import React from 'react';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
+import { User, UsageInfo } from '../types';
 
 interface CampaignInputProps {
+  user: User;
   goalPrompt: string;
   setGoalPrompt: (prompt: string) => void;
   audiencePrompt: string;
@@ -11,9 +14,11 @@ interface CampaignInputProps {
   recordingField: 'goal' | 'audience' | null;
   onToggleRecording: (field: 'goal' | 'audience') => void;
   onToggleLoadModal: () => void;
+  usageInfo: UsageInfo | null;
 }
 
 export const CampaignInput: React.FC<CampaignInputProps> = ({ 
+  user,
   goalPrompt, 
   setGoalPrompt, 
   audiencePrompt, 
@@ -23,6 +28,7 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
   recordingField,
   onToggleRecording,
   onToggleLoadModal,
+  usageInfo,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -49,6 +55,18 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
     );
   };
   
+  const isGenerateDisabled = isLoading || !goalPrompt.trim() || !audiencePrompt.trim() || !usageInfo?.canGenerate;
+  const generateButtonTooltip = (): string => {
+      if (!usageInfo) return "Checking usage limits...";
+      if (usageInfo.canGenerate) return "";
+      switch (usageInfo.reason) {
+          case 'quota_exceeded': return "You've reached your campaign limit for this period.";
+          case 'trial_expired': return "Your free trial has ended. Please subscribe to continue.";
+          case 'subscription_required': return "A subscription is required to generate campaigns.";
+          default: return "Cannot generate campaign at this time.";
+      }
+  };
+
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-semibold mb-4 text-indigo-300">Generative Campaign Builder</h2>
@@ -92,30 +110,34 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
             Press <kbd className="font-sans px-1.5 py-0.5 border border-gray-600 rounded">Ctrl</kbd> + <kbd className="font-sans px-1.5 py-0.5 border border-gray-600 rounded">Enter</kbd> to generate.
         </p>
         <div className="flex items-center gap-4">
-            <button
-                onClick={onToggleLoadModal}
-                disabled={isLoading}
-                className="px-6 py-2.5 bg-gray-700 text-white font-semibold rounded-md hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
-            >
-                Load Campaign
-            </button>
-            <button
-              onClick={onGenerate}
-              disabled={isLoading || !goalPrompt.trim() || !audiencePrompt.trim()}
-              className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : (
-                'Generate Campaign'
-              )}
-            </button>
+            {user.role !== 'User' && (
+                <button
+                    onClick={onToggleLoadModal}
+                    disabled={isLoading}
+                    className="px-6 py-2.5 bg-gray-700 text-white font-semibold rounded-md hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
+                >
+                    Load Campaign
+                </button>
+            )}
+            <div className="relative" title={generateButtonTooltip()}>
+                <button
+                  onClick={onGenerate}
+                  disabled={isGenerateDisabled}
+                  className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate Campaign'
+                  )}
+                </button>
+            </div>
         </div>
       </div>
     </div>

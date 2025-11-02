@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Campaign, Channel, ChannelConnection, CampaignExecutionPlan, ExecutionStatus } from '../types';
 import { RocketLaunchIcon } from './icons/RocketLaunchIcon';
@@ -68,7 +69,7 @@ export const CampaignExecutionManager: React.FC<CampaignExecutionManagerProps> =
         setIsLaunching(false);
     };
 
-    if (executableChannels.length === 0) {
+    if (executableChannels.length === 0 || campaign.isTrialCampaign) {
         return null;
     }
     

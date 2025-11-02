@@ -1,3 +1,4 @@
+
 // This is a simulated authentication service that uses localStorage to mimic a user database and session management.
 // In a real application, these methods would make API calls to a secure backend server.
 
@@ -14,6 +15,7 @@ export const authService = {
       throw new Error('An account with this email already exists.');
     }
     
+    // Create the user with trial data
     const newUser = await databaseService.createUser({
       ...data,
       channelConnections: JSON.parse(JSON.stringify(initialChannelConnections)), // Deep copy
