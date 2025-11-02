@@ -60,11 +60,21 @@ const channelIcons: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } =
   'In-App': InAppIcon,
 };
 
+// New color map for channels
+const channelColors: { [key: string]: string } = {
+  Email: 'bg-blue-600 text-blue-100',
+  SMS: 'bg-green-600 text-green-100',
+  Push: 'bg-purple-600 text-purple-100',
+  WhatsApp: 'bg-teal-600 text-teal-100',
+  'In-App': 'bg-orange-500 text-orange-100',
+};
+
 const ChannelBadge: React.FC<{ details: NodeDetails }> = ({ details }) => {
     if (!details?.channel) return null;
     const ChannelIcon = channelIcons[details.channel];
+    const colorClasses = channelColors[details.channel] || 'bg-gray-700 text-gray-300';
     return (
-        <span className="absolute top-2 right-2 flex items-center bg-gray-700 text-gray-300 text-xs font-medium px-2 py-1 rounded-full">
+        <span className={`absolute top-2 right-2 flex items-center ${colorClasses} text-xs font-medium px-2 py-1 rounded-full`}>
             {ChannelIcon && <ChannelIcon className="w-3 h-3 mr-1" />}
             {details.channel}
         </span>

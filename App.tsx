@@ -5,10 +5,12 @@ import { subscriptionService } from './services/subscriptionService';
 import { User } from './types';
 import { AuthPage } from './components/auth/AuthPage';
 import { MainApp } from './components/MainApp';
+import { LandingPage } from './components/landing/LandingPage';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [view, setView] = useState<'landing' | 'auth' | 'app'>('landing');
 
   const fetchUserWithSubscription = async (baseUser: User): Promise<User> => {
     const subscription = await subscriptionService.getSubscriptionForUser(baseUser.id);
@@ -23,11 +25,15 @@ const App: React.FC = () => {
         if (sessionUser) {
           const fullUser = await fetchUserWithSubscription(sessionUser);
           setUser(fullUser);
+          setView('app');
+        } else {
+            setView('landing');
         }
       } catch (error) {
         console.error("Session check failed:", error);
         // If session is invalid, ensure user is logged out.
         authService.logout();
+        setView('landing');
       } finally {
         setIsLoadingSession(false);
       }
@@ -38,11 +44,13 @@ const App: React.FC = () => {
   const handleLogin = useCallback(async (loggedInUser: User) => {
     const fullUser = await fetchUserWithSubscription(loggedInUser);
     setUser(fullUser);
+    setView('app');
   }, []);
 
   const handleLogout = useCallback(() => {
     authService.logout();
     setUser(null);
+    setView('landing');
   }, []);
   
   const handleUserUpdate = useCallback(async (updatedUser: User) => {
@@ -58,11 +66,21 @@ const App: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <AuthPage onLogin={handleLogin} />;
+  switch (view) {
+    case 'landing':
+        return <LandingPage onStartTrial={() => setView('auth')} />;
+    case 'auth':
+        return <AuthPage onLogin={handleLogin} onBackToHome={() => setView('landing')} />;
+    case 'app':
+        if (user) {
+            return <MainApp user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />;
+        }
+        // Fallback if user is somehow null
+        setView('landing');
+        return null;
+    default:
+        return <LandingPage onStartTrial={() => setView('auth')} />;
   }
-
-  return <MainApp user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />;
 };
 
 export default App;

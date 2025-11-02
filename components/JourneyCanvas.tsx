@@ -74,7 +74,7 @@ const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: S
 };
 
 const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strategy }) => (
-    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 border border-indigo-500/30 no-print">
+    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 border border-indigo-500/30">
         <div className="flex items-start space-x-4">
             <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center">
                 <SparklesIcon className="w-5 h-5 text-white" />
@@ -111,7 +111,7 @@ const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strate
 
 
 const AudienceSegment: React.FC<{ campaign: Campaign }> = ({ campaign }) => (
-    <div className="bg-gray-700/50 rounded-lg p-4 mb-6 no-print">
+    <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
         <div className="flex items-start space-x-4">
             <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
                 <UserGroupIcon className="w-5 h-5 text-white" />
@@ -391,12 +391,35 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
         </div>
       </div>
       
-      {campaign.strategy && <PrescriptiveStrategy strategy={campaign.strategy} />}
-      <AudienceSegment campaign={campaign} />
-      <div className="no-print">
-        {campaign && <AnalyticsDashboard kpis={campaign.kpis} />}
+      {/* Printable Report Content */}
+      <div id="journey-print-area">
+        <div className="print-only-header">
+            <h2 className="text-2xl font-bold">{campaign.name}</h2>
+            <p className="mt-1">{campaign.description}</p>
+            <div className="mt-4">
+                <h4 className="font-semibold mb-2">Key Performance Indicators (KPIs):</h4>
+                <div className="flex flex-wrap gap-2">
+                    {campaign.kpis.map((kpi, index) => (
+                        <span key={index} className="bg-gray-200 text-black text-xs font-medium px-2.5 py-1 rounded-full">{kpi}</span>
+                    ))}
+                </div>
+            </div>
+        </div>
+        {campaign.strategy && <PrescriptiveStrategy strategy={campaign.strategy} />}
+        <AudienceSegment campaign={campaign} />
         {campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
         {campaign.channelSelection && <ChannelSelectionDashboard selection={campaign.channelSelection} />}
+        
+        <h3 className="font-semibold text-lg text-white mb-4 mt-8 no-print">Customer Journey Flow</h3>
+        <h3 className="font-semibold text-lg text-black mb-4 print-only-header">Customer Journey Flow</h3>
+        <div>
+            {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
+        </div>
+      </div>
+
+      {/* Interactive, Non-Printable Content */}
+      <div className="no-print">
+        {campaign && <AnalyticsDashboard kpis={campaign.kpis} />}
 
         <AssetGenerationController
             progress={assetGenerationProgress}
@@ -446,26 +469,6 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
                 recommendedChannels={recommendedChannels}
             />
         )}
-      </div>
-
-      <div id="journey-print-area">
-        <div className="print-only-header">
-            <h2 className="text-2xl font-bold">{campaign.name}</h2>
-            <p className="mt-1">{campaign.description}</p>
-            <div className="mt-4">
-                <h4 className="font-semibold mb-2">Key Performance Indicators (KPIs):</h4>
-                <div className="flex flex-wrap gap-2">
-                    {campaign.kpis.map((kpi, index) => (
-                        <span key={index} className="bg-gray-200 text-black text-xs font-medium px-2.5 py-1 rounded-full">{kpi}</span>
-                    ))}
-                </div>
-            </div>
-        </div>
-        <h3 className="font-semibold text-lg text-white mb-4 mt-8 no-print">Customer Journey Flow</h3>
-        <h3 className="font-semibold text-lg text-black mb-4 print-only-header">Customer Journey Flow</h3>
-        <div>
-            {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
-        </div>
       </div>
     </div>
   );
