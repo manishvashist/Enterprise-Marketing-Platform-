@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { CampaignInput } from './CampaignInput';
@@ -11,10 +10,11 @@ import { Campaign, User, AssetGenerationProgress, VideoAssetState, UsageInfo } f
 import { ConnectionsView } from './ConnectionsView';
 import { LoadCampaignModal } from './LoadCampaignModal';
 import { BillingView } from './billing/BillingView';
-import { TrialBanner } from './TrialBanner';
+import { UsageMessage } from './UsageMessage';
 
 type LiveSession = Awaited<ReturnType<typeof startTranscriptionSession>>;
-type AppView = 'campaign' | 'editor' | 'connections' | 'admin' | 'billing';
+type AppView = 'campaign' | 'admin' | 'billing';
+type BillingSubView = 'subscription' | 'profile';
 
 interface MainAppProps {
     user: User;
@@ -42,6 +42,7 @@ const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setVi
 
 export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }) => {
   const [view, setView] = useState<AppView>('campaign');
+  const [initialBillingTab, setInitialBillingTab] = useState<BillingSubView>('subscription');
   const [goalPrompt, setGoalPrompt] = useState<string>('');
   const [audiencePrompt, setAudiencePrompt] = useState<string>('');
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -66,6 +67,13 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
     isGeneratingAll: false,
     channelProgress: {},
   });
+
+  const handleSetView = (newView: AppView, initialTab: BillingSubView = 'subscription') => {
+      setView(newView);
+      if (newView === 'billing') {
+          setInitialBillingTab(initialTab);
+      }
+  };
 
   useEffect(() => {
     const checkKey = async () => {
@@ -432,15 +440,8 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
                     />
                 </>
             );
-        case 'editor':
-            return <ImageEditor />;
-        case 'connections':
-            return <ConnectionsView 
-                      user={user}
-                      onUserUpdate={onUserUpdate}
-                    />;
         case 'billing':
-            return <BillingView user={user} onSubscriptionChange={onUserUpdate} />;
+            return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} />;
         case 'admin':
             return user.role === 'Admin' ? <div><h1 className="text-white text-2xl">Admin Dashboard</h1><p className="text-gray-400">User management and system settings will be here.</p></div> : null;
         default:
@@ -451,9 +452,9 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
-      <Header currentView={view} setView={setView} user={user} onLogout={onLogout} />
-       {user.accountStatus === 'trial' && usageInfo && <TrialBanner usageInfo={usageInfo} setView={setView} />}
-      <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col">
+      <Header currentView={view} setView={handleSetView} user={user} onLogout={onLogout} />
+      <UsageMessage usageInfo={usageInfo} setView={handleSetView} />
+      <main className="flex-grow container mx-auto px-4 md:p-8 flex flex-col">
         {renderCurrentView()}
       </main>
     </div>

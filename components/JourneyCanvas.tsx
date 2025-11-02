@@ -242,7 +242,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
   const firstNodeId = campaign.nodes.find(n => n.id === 1) ? 1 : (campaign.nodes[0]?.id || null);
   const generatedAssetChannels = Object.keys(campaign.channelAssets || {});
-  const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]) => state.status === 'done' && state.url);
+  // FIX: Explicitly type 'state' to resolve type inference issue.
+  const generatedVideoAssets = Object.entries(videoAssets).filter(([, state]: [string, VideoAssetState]) => state.status === 'done' && !!state.url);
   const hasGeneratedAssets = generatedAssetChannels.length > 0 || generatedVideoAssets.length > 0;
   
   const getSaveButtonStatus = () => {
@@ -430,7 +431,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
             <div className="mt-8">
                 <h3 className="font-semibold text-lg text-white mb-4">Generated Video Assets</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {generatedVideoAssets.map(([channelName, videoState]) => (
+                    {/* FIX: Explicitly type `videoState` to resolve the 'unknown' type error when accessing `.url`. */}
+                    {generatedVideoAssets.map(([channelName, videoState]: [string, VideoAssetState]) => (
                     <VideoAssetCard key={channelName} channelName={channelName} videoUrl={videoState.url!} />
                     ))}
                 </div>

@@ -5,9 +5,10 @@ import { UserCircleIcon } from './icons/UserCircleIcon';
 interface ProfileDropdownProps {
   user: User;
   onLogout: () => void;
+  onGoToProfile: () => void;
 }
 
-export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout }) => {
+export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout, onGoToProfile }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +49,13 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout
              <p className="text-sm font-semibold text-white truncate">{user.fullName}</p>
              <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
+          <button
+            onClick={() => { onGoToProfile(); setIsOpen(false); }}
+            className="w-full text-left block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            role="menuitem"
+          >
+            Profile Settings
+          </button>
           <button
             onClick={onLogout}
             className="w-full text-left block px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"

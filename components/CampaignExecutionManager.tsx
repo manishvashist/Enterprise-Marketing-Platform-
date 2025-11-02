@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Campaign, Channel, ChannelConnection, CampaignExecutionPlan, ExecutionStatus } from '../types';
 import { RocketLaunchIcon } from './icons/RocketLaunchIcon';
@@ -16,8 +17,10 @@ export const CampaignExecutionManager: React.FC<CampaignExecutionManagerProps> =
     const executableChannels = useMemo(() => {
         const generatedChannels = new Set(Object.keys(campaign.channelAssets || {}));
         const connectedChannelNames = new Set(Object.values(connections)
-            .filter(c => c.connectionStatus === 'connected')
-            .map(c => c.channelName));
+            // FIX: Explicitly type 'c' to resolve type inference issue.
+            .filter((c: ChannelConnection) => c.connectionStatus === 'connected')
+            // FIX: Explicitly type 'c' to resolve type inference issue.
+            .map((c: ChannelConnection) => c.channelName));
         
         return recommendedChannels.filter(rc => 
             generatedChannels.has(rc.channelName) && connectedChannelNames.has(rc.channelName)
@@ -83,7 +86,8 @@ export const CampaignExecutionManager: React.FC<CampaignExecutionManagerProps> =
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                     {executableChannels.map(channel => {
-                        const connection = Object.values(connections).find(c => c.channelName === channel.channelName);
+                        // FIX: Explicitly type 'c' to resolve type inference issue.
+                        const connection = Object.values(connections).find((c: ChannelConnection) => c.channelName === channel.channelName);
                         if (!connection || !executionPlan[channel.channelName]) return null;
                         
                         return (

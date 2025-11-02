@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
 import { User } from '../../types';
+import { SocialLogins } from './SocialLogins';
 
 interface LoginFormProps {
   onLogin: (user: User) => void;
@@ -32,6 +34,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
       <h2 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h2>
       <p className="text-gray-400 text-center mb-6">Sign in to continue to your dashboard.</p>
       
+      <SocialLogins onSocialLogin={onLogin} context="Sign in" />
+
+      <div className="my-6 flex items-center">
+          <div className="flex-grow border-t border-gray-600"></div>
+          <span className="flex-shrink mx-4 text-gray-400 text-sm">Or with email</span>
+          <div className="flex-grow border-t border-gray-600"></div>
+      </div>
+
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>

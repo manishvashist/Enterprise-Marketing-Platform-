@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Channel, ChannelAssetGenerationResult, ChannelConnection } from '../types';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
@@ -18,7 +19,8 @@ export const PreLaunchChecklist: React.FC<PreLaunchChecklistProps> = ({ channels
     
     const checklist: ChecklistItem[] = channels.flatMap(channel => {
         const assetGenerated = !!assets[channel.channelName];
-        const channelConnected = !!Object.values(connections).find(c => c.channelName === channel.channelName && c.connectionStatus === 'connected');
+        // FIX: Explicitly type 'c' to resolve type inference issue.
+        const channelConnected = !!Object.values(connections).find((c: ChannelConnection) => c.channelName === channel.channelName && c.connectionStatus === 'connected');
 
         return [
             {

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo } from 'react';
 import { ChannelConnection, ConnectedAccount, User } from '../types';
 import { availableAccounts } from '../data/channels';
@@ -61,7 +63,8 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ user, onUserUp
 
 
   const groupedConnections = useMemo(() => {
-    return Object.values(user.channelConnections).reduce((acc, conn) => {
+    // FIX: Explicitly type 'conn' to resolve type inference issue.
+    return Object.values(user.channelConnections).reduce((acc, conn: ChannelConnection) => {
       const category = conn.category;
       if (!acc[category]) {
         acc[category] = [];
@@ -81,7 +84,8 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ user, onUserUp
       </div>
 
       <div className="space-y-8">
-        {Object.entries(groupedConnections).map(([category, channels]) => (
+        {/* FIX: Explicitly type `channels` to resolve the 'unknown' type error. */}
+        {Object.entries(groupedConnections).map(([category, channels]: [string, ChannelConnection[]]) => (
           <div key={category}>
             <h2 className="text-xl font-semibold text-indigo-300 mb-4">{category}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

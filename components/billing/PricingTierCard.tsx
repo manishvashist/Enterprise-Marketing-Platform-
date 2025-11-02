@@ -7,6 +7,7 @@ interface PricingTierCardProps {
     plan: SubscriptionPlan;
     billingType: BillingType;
     onSubscribe: () => void;
+    isMostPopular?: boolean;
 }
 
 const formatPrice = (price: number) => {
@@ -18,7 +19,7 @@ const formatPrice = (price: number) => {
     }).format(price);
 };
 
-export const PricingTierCard: React.FC<PricingTierCardProps> = ({ plan, billingType, onSubscribe }) => {
+export const PricingTierCard: React.FC<PricingTierCardProps> = ({ plan, billingType, onSubscribe, isMostPopular }) => {
     const isAnnual = billingType === 'annual';
     const displayPrice = isAnnual ? plan.annualPrice / 12 : plan.monthlyPrice;
     const pricePeriod = isAnnual ? 'per month, billed annually' : 'per month';
@@ -30,9 +31,14 @@ export const PricingTierCard: React.FC<PricingTierCardProps> = ({ plan, billingT
     };
 
     return (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 flex flex-col hover:border-indigo-500/80 transition-all duration-300 shadow-lg">
+        <div className={`bg-gray-800 rounded-lg p-6 border flex flex-col hover:border-indigo-500/80 transition-all duration-300 shadow-lg relative ${isMostPopular ? 'border-indigo-500' : 'border-gray-700'}`}>
+            {isMostPopular && (
+                <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
+                    <span className="bg-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+                </div>
+            )}
             <h3 className="text-xl font-bold text-indigo-400">{plan.name}</h3>
-            <p className="text-sm text-gray-400 mt-2 flex-grow">{plan.name === 'Pro' ? 'For individuals and small teams.' : plan.name === 'Pro Plus' ? 'For growing businesses.' : 'For large-scale enterprises.'}</p>
+            <p className="text-sm text-gray-400 mt-2 flex-grow">{plan.name === 'Individual' ? 'For individuals and small teams.' : plan.name === 'Small Team' ? 'For growing businesses.' : 'For large-scale enterprises.'}</p>
             
             <div className="my-6">
                 <span className="text-4xl font-extrabold text-white">{formatPrice(displayPrice)}</span>

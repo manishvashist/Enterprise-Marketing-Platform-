@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
 import { User } from '../types';
 
-// FIX: Use a specific union type for view and setView to match the state type in MainApp and fix type incompatibility.
-type AppView = 'campaign' | 'editor' | 'connections' | 'admin' | 'billing';
+type AppView = 'campaign' | 'admin' | 'billing';
+type BillingSubView = 'subscription' | 'profile';
 
 interface HeaderProps {
   currentView: AppView;
-  setView: (view: AppView) => void;
+  setView: (view: AppView, initialTab?: BillingSubView) => void;
   user: User;
   onLogout: () => void;
 }
@@ -17,6 +16,10 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLo
   const navButtonStyle = "px-4 py-2 rounded-md text-sm font-medium transition-colors";
   const activeStyle = "bg-indigo-600 text-white";
   const inactiveStyle = "text-gray-300 hover:bg-gray-700 hover:text-white";
+
+  const handleGoToProfile = () => {
+    setView('billing', 'profile');
+  };
 
   return (
     <header className="bg-gray-800 shadow-md">
@@ -42,21 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLo
                   Campaign Generator
                 </button>
                 <button 
-                  onClick={() => setView('editor')}
-                  className={`${navButtonStyle} ${currentView === 'editor' ? activeStyle : inactiveStyle}`}
-                  aria-current={currentView === 'editor' ? 'page' : undefined}
-                >
-                  Image Editor
-                </button>
-                 <button 
-                  onClick={() => setView('connections')}
-                  className={`${navButtonStyle} ${currentView === 'connections' ? activeStyle : inactiveStyle}`}
-                  aria-current={currentView === 'connections' ? 'page' : undefined}
-                >
-                  Connections
-                </button>
-                <button 
-                  onClick={() => setView('billing')}
+                  onClick={() => setView('billing', 'subscription')}
                   className={`${navButtonStyle} ${currentView === 'billing' ? activeStyle : inactiveStyle}`}
                   aria-current={currentView === 'billing' ? 'page' : undefined}
                 >
@@ -72,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLo
                     </button>
                 )}
             </nav>
-            <ProfileDropdown user={user} onLogout={onLogout} />
+            <ProfileDropdown user={user} onLogout={onLogout} onGoToProfile={handleGoToProfile} />
         </div>
       </div>
     </header>

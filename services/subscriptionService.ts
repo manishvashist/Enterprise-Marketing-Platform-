@@ -1,3 +1,4 @@
+
 import { databaseService } from './databaseService';
 // FIX: Import SubscriptionPlan to resolve 'Cannot find name' error.
 import { User, Campaign, UsageInfo, PlanCode, BillingType, UserSubscription, SubscriptionPlan } from '../types';
@@ -21,7 +22,7 @@ export const subscriptionService = {
         await databaseService.updateUser(user);
         return { canGenerate: false, reason: 'trial_expired' };
       }
-      if (user.trialCampaignsUsed < 3) {
+      if (user.trialCampaignsUsed < 1) {
         return { canGenerate: true, reason: 'trial' };
       }
       return { canGenerate: false, reason: 'quota_exceeded' };
@@ -86,15 +87,15 @@ export const subscriptionService = {
       const trialEndDate = new Date(user.trialEndDate!);
       const now = new Date();
       if (trialEndDate < now) {
-         return { canGenerate: false, reason: 'trial_expired', remaining: 0, limit: 3 };
+         return { canGenerate: false, reason: 'trial_expired', remaining: 0, limit: 1 };
       }
       const trialDaysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
-      const remaining = 3 - user.trialCampaignsUsed;
+      const remaining = 1 - user.trialCampaignsUsed;
       return {
         canGenerate: remaining > 0,
         reason: remaining > 0 ? 'trial' : 'quota_exceeded',
         remaining,
-        limit: 3,
+        limit: 1,
         trialDaysRemaining,
       };
     }
@@ -133,15 +134,15 @@ export const subscriptionService = {
 
       const now = new Date();
       const periodEnd = new Date(now);
-      let nextBillingDate: Date | null = null;
+      const quotaResetDate = new Date(now);
 
       if (billingType === 'annual') {
           periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-          nextBillingDate = new Date(periodEnd);
       } else {
           periodEnd.setDate(periodEnd.getDate() + plan.quotaPeriodDays);
-          nextBillingDate = new Date(periodEnd);
       }
+      
+      quotaResetDate.setDate(quotaResetDate.getDate() + plan.quotaPeriodDays); // Quota always resets monthly (based on plan's quotaPeriodDays)
 
       const newSubData: Omit<UserSubscription, 'id' | 'plan'> = {
         userId,
@@ -151,11 +152,11 @@ export const subscriptionService = {
         startDate: now.toISOString(),
         currentPeriodStart: now.toISOString(),
         currentPeriodEnd: periodEnd.toISOString(),
-        nextBillingDate: nextBillingDate.toISOString(),
+        nextBillingDate: periodEnd.toISOString(),
         cancellationDate: null,
         campaignsUsedCurrentPeriod: 0,
         campaignQuota: plan.campaignQuota,
-        quotaResetDate: periodEnd.toISOString(),
+        quotaResetDate: quotaResetDate.toISOString(),
         autoRenew: true,
       };
 

@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 // FIX: Import AssetGenerationProgress from types.ts to solve module resolution and circular dependency issues.
 import { AssetGenerationProgress, Channel } from '../types';
@@ -89,7 +91,8 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
 
             {/* Channel Buttons */}
             <div className="space-y-6">
-                {Object.entries(groupedChannels).map(([category, channels]) => (
+                {/* FIX: Explicitly type `channels` to resolve 'unknown' type error. */}
+                {Object.entries(groupedChannels).map(([category, channels]: [string, (Channel & { category: string })[]]) => (
                     <div key={category}>
                         <h4 className="font-medium text-gray-300 mb-3">{category}</h4>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

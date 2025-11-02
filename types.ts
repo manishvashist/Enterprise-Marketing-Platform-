@@ -285,7 +285,7 @@ export interface VideoAssetState {
 // --- NEW TYPES for Subscriptions & Billing ---
 export type AccountStatus = 'trial' | 'active' | 'expired' | 'cancelled';
 export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'past_due';
-export type PlanCode = 'pro' | 'pro_plus' | 'elite';
+export type PlanCode = 'individual' | 'small_team' | 'agency';
 export type BillingType = 'monthly' | 'annual';
 
 export interface SubscriptionPlan {
@@ -330,6 +330,7 @@ export interface UsageInfo {
 
 // --- UPDATED User type ---
 export type UserRole = 'Admin' | 'Manager' | 'User';
+export type AuthProvider = 'email' | 'google' | 'github' | 'microsoft' | 'facebook';
 
 export interface User {
   id: string;
@@ -338,6 +339,8 @@ export interface User {
   passwordHash: string; // In a real app, this would never be sent to the client. For simulation only.
   role: UserRole;
   createdAt: string;
+  lastLogin: string;
+  authProvider: AuthProvider;
   channelConnections: Record<string, ChannelConnection>;
   // New subscription fields
   accountStatus: AccountStatus;

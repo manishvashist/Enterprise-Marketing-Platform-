@@ -408,6 +408,7 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
       },
     });
 
+    // FIX: Use response.text instead of response.text()
     const jsonString = response.text.trim();
     
     if (!jsonString) {
@@ -493,6 +494,7 @@ Generate a set of production-ready marketing assets. For each asset, create at l
             },
         });
 
+        // FIX: Use response.text instead of response.text()
         const jsonString = response.text.trim();
         if (!jsonString) {
             throw new Error(`Asset generation API returned an empty response for ${channelName}.`);

@@ -1,5 +1,5 @@
 
-import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription, BillingType } from '../types';
+import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription, BillingType, AuthProvider } from '../types';
 import { initialSubscriptionPlans } from '../data/plans';
 
 // This is a simulated asynchronous database service that uses localStorage.
@@ -16,7 +16,7 @@ interface Database {
 }
 
 // In a real app, this would be a secure hashing function on the server.
-const mockHash = (password: string): string => `hashed_${password}_somesalt`;
+export const mockHash = (password: string): string => `hashed_${password}_somesalt`;
 
 const _getDb = (): Database => {
     try {
@@ -27,7 +27,7 @@ const _getDb = (): Database => {
             return {
                 users: parsed.users || {},
                 campaigns: parsed.campaigns || {},
-                subscription_plans: parsed.subscription_plans || {},
+                subscription_plans: parsed.subscription_plans || initialSubscriptionPlans,
                 user_subscriptions: parsed.user_subscriptions || {}
             };
         }
@@ -69,7 +69,7 @@ export const databaseService = {
         return Object.values(db.users).find(u => u.id === id) || null;
     },
 
-    async createUser(data: { fullName: string; email: string; password: string; role: 'Admin' | 'Manager' | 'User'; channelConnections: Record<string, any> }): Promise<User> {
+    async createUser(data: { fullName: string; email: string; password?: string; authProvider: AuthProvider; channelConnections: Record<string, any> }): Promise<User> {
         await _simulateLatency();
         const db = _getDb();
         const normalizedEmail = data.email.toLowerCase();
@@ -85,9 +85,12 @@ export const databaseService = {
             id: `user_${Date.now()}`,
             fullName: data.fullName,
             email: normalizedEmail,
-            passwordHash: mockHash(data.password),
-            role: data.role,
+            // Use provided password or a random one for OAuth users
+            passwordHash: mockHash(data.password || `social_${Date.now()}`),
+            role: 'User', // Assign default role
             createdAt: now.toISOString(),
+            lastLogin: now.toISOString(),
+            authProvider: data.authProvider,
             channelConnections: data.channelConnections,
             accountStatus: 'trial',
             trialStartDate: now.toISOString(),
@@ -105,11 +108,55 @@ export const databaseService = {
         await _simulateLatency();
         const db = _getDb();
         if (!db.users[updatedUser.email]) {
-            throw new Error("User not found for update.");
+            // Find by ID if email has changed
+            const oldUser = Object.values(db.users).find(u => u.id === updatedUser.id);
+            if(oldUser && oldUser.email !== updatedUser.email) {
+                delete db.users[oldUser.email]; // remove old email key
+            } else if (!oldUser) {
+                throw new Error("User not found for update.");
+            }
         }
         db.users[updatedUser.email] = updatedUser;
         _saveDb(db);
         return updatedUser;
+    },
+
+    async updateUserProfile(userId: string, updates: { fullName?: string; email?: string }): Promise<User> {
+        await _simulateLatency();
+        const db = _getDb();
+        const user = await this.findUserById(userId);
+        if(!user) throw new Error("User not found.");
+
+        const updatedUser = { ...user, ...updates };
+        
+        // If email changed, we need to re-key the user in our mock DB
+        if(updates.email && updates.email.toLowerCase() !== user.email) {
+            delete db.users[user.email];
+            if(db.users[updates.email.toLowerCase()]) {
+                throw new Error("New email address is already in use.");
+            }
+            db.users[updates.email.toLowerCase()] = updatedUser;
+        } else {
+            db.users[user.email] = updatedUser;
+        }
+
+        _saveDb(db);
+        return updatedUser;
+    },
+
+    async updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+        await _simulateLatency();
+        const db = _getDb();
+        const user = await this.findUserById(userId);
+
+        if(!user) throw new Error("User not found.");
+        if(user.passwordHash !== mockHash(currentPassword)) {
+            throw new Error("Incorrect current password.");
+        }
+        
+        user.passwordHash = mockHash(newPassword);
+        db.users[user.email] = user;
+        _saveDb(db);
     },
     
     // --- Campaign Methods ---

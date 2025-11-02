@@ -51,7 +51,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ user, plans, onSubscri
                     ></div>
                 </div>
                  <div className="ml-4 flex items-center">
-                    <span className="text-sm text-green-400 bg-green-900/50 font-semibold px-3 py-1 rounded-full">Save 10%</span>
+                    <span className="text-sm text-green-400 bg-green-900/50 font-semibold px-3 py-1 rounded-full">Save 20%</span>
                 </div>
             </div>
 
@@ -63,6 +63,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ user, plans, onSubscri
                         plan={plan}
                         billingType={billingType}
                         onSubscribe={() => handleSubscribeClick(plan)}
+                        isMostPopular={plan.planCode === 'small_team'}
                     />
                 ))}
             </div>
