@@ -9,7 +9,8 @@ export const subscriptionService = {
   },
 
   async canGenerateCampaign(userId: string): Promise<{ canGenerate: boolean, reason: UsageInfo['reason'] }> {
-    const user = await databaseService.findUserById(userId);
+    // FIX: Corrected method name from findUserById to getProfile.
+    const user = await databaseService.getProfile(userId);
     if (!user) {
       throw new Error("User not found.");
     }
@@ -19,7 +20,8 @@ export const subscriptionService = {
       if (isExpired) {
         // Automatically expire the user's status if not already done by a cron job
         user.accountStatus = 'expired';
-        await databaseService.updateUser(user);
+        // FIX: Corrected method name from updateUser to updateProfile and adjusted arguments.
+        await databaseService.updateProfile(user.id, user);
         return { canGenerate: false, reason: 'trial_expired' };
       }
       if (user.trialCampaignsUsed < 1) {
@@ -40,7 +42,8 @@ export const subscriptionService = {
   },
 
   async createCampaignUsage(userId: string, campaignData: Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>): Promise<Campaign> {
-    const user = await databaseService.findUserById(userId);
+    // FIX: Corrected method name from findUserById to getProfile.
+    const user = await databaseService.getProfile(userId);
     if (!user) throw new Error("User not found.");
 
     let updatedUser = { ...user };
@@ -61,7 +64,8 @@ export const subscriptionService = {
         throw new Error("User is not eligible to create a campaign.");
     }
     
-    await databaseService.updateUser(updatedUser);
+    // FIX: Corrected method name from updateUser to updateProfile and adjusted arguments.
+    await databaseService.updateProfile(updatedUser.id, updatedUser);
 
     // FIX: Add createdAt and updatedAt to satisfy the type of createCampaign parameter.
     // The createCampaign method in databaseService has a slightly mismatched type signature where it expects
@@ -80,7 +84,8 @@ export const subscriptionService = {
   },
 
   async getUsageInfo(userId: string): Promise<UsageInfo> {
-    const user = await databaseService.findUserById(userId);
+    // FIX: Corrected method name from findUserById to getProfile.
+    const user = await databaseService.getProfile(userId);
     if (!user) throw new Error("User not found.");
 
     if (user.accountStatus === 'trial') {
@@ -123,7 +128,8 @@ export const subscriptionService = {
   },
 
   async createSubscription(userId: string, planCode: PlanCode, billingType: BillingType): Promise<User> {
-      const user = await databaseService.findUserById(userId);
+      // FIX: Corrected method name from findUserById to getProfile.
+      const user = await databaseService.getProfile(userId);
       const plan = await databaseService.findPlanByCode(planCode);
 
       if (!user) throw new Error("User not found.");
@@ -168,6 +174,7 @@ export const subscriptionService = {
           activeSubscription: newSub,
       };
       
-      return await databaseService.updateUser(updatedUser);
+      // FIX: Corrected method name from updateUser to updateProfile and adjusted arguments.
+      return await databaseService.updateProfile(updatedUser.id, updatedUser);
   }
 };

@@ -13,30 +13,28 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLogout }) => {
-  const navButtonStyle = "px-4 py-2 rounded-md text-sm font-medium transition-colors";
-  const activeStyle = "bg-indigo-600 text-white";
-  const inactiveStyle = "text-gray-300 hover:bg-gray-700 hover:text-white";
+  const navButtonStyle = "px-4 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800";
+  const activeStyle = "bg-slate-700 text-white";
+  const inactiveStyle = "text-gray-400 hover:bg-slate-700/50 hover:text-white";
 
   const handleGoToProfile = () => {
     setView('billing', 'profile');
   };
 
   return (
-    <header className="bg-gray-800 shadow-md">
-      <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+    <header className="bg-slate-800/80 backdrop-blur-lg sticky top-0 z-40 border-b border-white/10">
+      <div className="container mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center">
-           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400 mr-3" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" opacity=".3"/>
-              <path d="M12.88 4.62l-1.76.81L12 2l.88 3.43zM6.12 6.12l.81 1.76L4.62 7.12 2 6l3.43-.88zM4.62 16.88l1.76-.81L6 22l-.88-3.43zM16.88 19.38l.81-1.76L19.38 16.88 22 18l-3.43.88zM19.38 7.12l-1.76-.81L18 2l.88 3.43zM12 5c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-              <path d="M12.88 19.38l-1.76-.81L12 22l.88-3.43zM7.12 4.62l1.76.81L8 2l-.88 3.43z"/>
+           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.25 21.75l-.648-1.178a3.375 3.375 0 00-2.456-2.456L12 17.25l1.178-.648a3.375 3.375 0 002.456-2.456L16.25 13.5l.648 1.178a3.375 3.375 0 002.456 2.456L20.25 18l-1.178.648a3.375 3.375 0 00-2.456 2.456z" />
            </svg>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Enterprise Marketing Platform
+          <h1 className="text-xl font-bold text-white tracking-tight hidden sm:block">
+            AI Marketing Platform
           </h1>
         </div>
         
         <div className="flex items-center space-x-4">
-            <nav className="flex items-center space-x-2 bg-gray-900/50 p-1 rounded-lg">
+            <nav className="flex items-center space-x-2 bg-slate-900/50 p-1 rounded-lg">
                 <button 
                   onClick={() => setView('campaign')}
                   className={`${navButtonStyle} ${currentView === 'campaign' ? activeStyle : inactiveStyle}`}

@@ -9,6 +9,8 @@ interface LoadCampaignModalProps {
   onLoad: (campaign: Campaign) => void;
   onDelete: (campaignId: string) => void;
   user: User;
+  isFetching: boolean;
+  deletingId: string | null;
 }
 
 export const LoadCampaignModal: React.FC<LoadCampaignModalProps> = ({
@@ -17,7 +19,9 @@ export const LoadCampaignModal: React.FC<LoadCampaignModalProps> = ({
   campaigns,
   onLoad,
   onDelete,
-  user
+  user,
+  isFetching,
+  deletingId,
 }) => {
   if (!isOpen) return null;
 
@@ -43,35 +47,52 @@ export const LoadCampaignModal: React.FC<LoadCampaignModalProps> = ({
         </div>
         
         <div className="p-6 max-h-[60vh] overflow-y-auto">
-          {campaigns.length > 0 ? (
+          {isFetching ? (
+            <div className="text-center py-8">
+                <svg className="animate-spin h-8 w-8 text-indigo-400 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-gray-400">Loading saved campaigns...</p>
+            </div>
+          ) : campaigns.length > 0 ? (
             <div className="space-y-3">
-              {campaigns.map(c => (
-                <div
-                  key={c.id}
-                  onClick={() => !c.isTrialCampaign && onLoad(c)}
-                  title={c.isTrialCampaign ? "Trial campaigns cannot be loaded or edited." : ""}
-                  className={`w-full text-left p-4 bg-gray-900 rounded-md border border-gray-700 flex justify-between items-center transition-all ${c.isTrialCampaign ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-700/50 hover:border-indigo-500 cursor-pointer'}`}
-                >
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <p className="font-semibold text-white">{c.name}</p>
-                            {c.isTrialCampaign && (
-                                <span className="text-xs font-semibold bg-yellow-800/80 text-yellow-300 px-2 py-0.5 rounded-full">Trial</span>
-                            )}
+              {campaigns.map(c => {
+                const isDeleting = deletingId === c.id;
+                return (
+                    <div
+                    key={c.id}
+                    onClick={() => !c.isTrialCampaign && onLoad(c)}
+                    title={c.isTrialCampaign ? "Trial campaigns cannot be loaded or edited." : ""}
+                    className={`w-full text-left p-4 bg-gray-900 rounded-md border border-gray-700 flex justify-between items-center transition-all ${c.isTrialCampaign ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-700/50 hover:border-indigo-500 cursor-pointer'}`}
+                    >
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <p className="font-semibold text-white">{c.name}</p>
+                                {c.isTrialCampaign && (
+                                    <span className="text-xs font-semibold bg-yellow-800/80 text-yellow-300 px-2 py-0.5 rounded-full">Trial</span>
+                                )}
+                            </div>
+                            <p className="text-sm text-gray-400 mt-1 line-clamp-1">{c.description}</p>
+                            <p className="text-xs text-gray-500 mt-2">Last updated: {new Date(c.updatedAt!).toLocaleString()}</p>
                         </div>
-                        <p className="text-sm text-gray-400 mt-1 line-clamp-1">{c.description}</p>
-                        <p className="text-xs text-gray-500 mt-2">Last updated: {new Date(c.updatedAt!).toLocaleString()}</p>
+                        {user.role !== 'User' && (
+                            <button
+                                onClick={(e) => handleDelete(e, c.id!)}
+                                disabled={isDeleting}
+                                className="ml-4 flex-shrink-0 px-3 py-1.5 bg-red-800/80 text-white font-semibold rounded-md hover:bg-red-700 transition-colors text-xs w-20 flex justify-center items-center disabled:bg-gray-600"
+                            >
+                                {isDeleting ? (
+                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                ) : 'Delete'}
+                            </button>
+                        )}
                     </div>
-                    {user.role !== 'User' && (
-                        <button
-                            onClick={(e) => handleDelete(e, c.id!)}
-                            className="ml-4 flex-shrink-0 px-3 py-1.5 bg-red-800/80 text-white font-semibold rounded-md hover:bg-red-700 transition-colors text-xs"
-                        >
-                            Delete
-                        </button>
-                    )}
-                </div>
-              ))}
+                );
+            })}
             </div>
           ) : (
             <p className="text-gray-500 text-center py-8">You have no saved campaigns.</p>

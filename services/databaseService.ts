@@ -1,269 +1,361 @@
 
-import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription, BillingType, AuthProvider } from '../types';
-import { initialSubscriptionPlans } from '../data/plans';
+import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription } from '../types';
+import { supabase } from './supabaseClient';
 
-// This is a simulated asynchronous database service that uses localStorage.
-// It mimics network latency with a short delay.
+// --- Data Mapping Utilities ---
 
-const DB_KEY = 'EMP_DATABASE_V2';
-const SIMULATED_LATENCY_MS = 100;
-
-interface Database {
-    users: Record<string, User>; // key is email
-    campaigns: Record<string, Campaign>; // key is campaignId
-    subscription_plans: Record<string, SubscriptionPlan>;
-    user_subscriptions: Record<string, UserSubscription>;
-}
-
-// In a real app, this would be a secure hashing function on the server.
-export const mockHash = (password: string): string => `hashed_${password}_somesalt`;
-
-const _getDb = (): Database => {
-    try {
-        const dbString = localStorage.getItem(DB_KEY);
-        if (dbString) {
-            const parsed = JSON.parse(dbString);
-            // Ensure all tables exist
-            return {
-                users: parsed.users || {},
-                campaigns: parsed.campaigns || {},
-                subscription_plans: parsed.subscription_plans || initialSubscriptionPlans,
-                user_subscriptions: parsed.user_subscriptions || {}
-            };
-        }
-    } catch (e) {
-        console.error("Failed to parse DB from localStorage", e);
-    }
-    // Return a default structure if DB doesn't exist or is corrupt
-    const defaultDb: Database = { 
-        users: {}, 
-        campaigns: {},
-        subscription_plans: initialSubscriptionPlans,
-        user_subscriptions: {},
+const mapDbProfileToUser = (dbProfile: any): User => {
+    return {
+        id: dbProfile.id,
+        fullName: dbProfile.full_name,
+        email: dbProfile.email,
+        role: dbProfile.role,
+        createdAt: dbProfile.created_at,
+        lastLogin: dbProfile.last_login,
+        authProvider: dbProfile.auth_provider,
+        channelConnections: dbProfile.channel_connections,
+        accountStatus: dbProfile.account_status,
+        trialStartDate: dbProfile.trial_start_date,
+        trialEndDate: dbProfile.trial_end_date,
+        trialCampaignsUsed: dbProfile.trial_campaigns_used,
+        activeSubscription: dbProfile.active_subscription,
     };
-    _saveDb(defaultDb);
-    return defaultDb;
 };
 
-const _saveDb = (db: Database): void => {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
+const mapUserToDbProfile = (user: Partial<User>): any => {
+    const dbProfile: { [key: string]: any } = {};
+    if (user.id) dbProfile.id = user.id;
+    if (user.fullName) dbProfile.full_name = user.fullName;
+    if (user.email) dbProfile.email = user.email;
+    if (user.role) dbProfile.role = user.role;
+    if (user.authProvider) dbProfile.auth_provider = user.authProvider;
+    if (user.channelConnections) dbProfile.channel_connections = user.channelConnections;
+    if (user.accountStatus) dbProfile.account_status = user.accountStatus;
+    if (user.trialStartDate) dbProfile.trial_start_date = user.trialStartDate;
+    if (user.trialEndDate) dbProfile.trial_end_date = user.trialEndDate;
+    if (user.trialCampaignsUsed !== undefined) dbProfile.trial_campaigns_used = user.trialCampaignsUsed;
+    if (user.activeSubscription !== undefined) dbProfile.active_subscription = user.activeSubscription;
+    return dbProfile;
 };
 
-const _simulateLatency = (): Promise<void> => {
-    return new Promise(resolve => setTimeout(resolve, SIMULATED_LATENCY_MS));
+const mapDbCampaignToCampaign = (dbCampaign: any): Campaign => {
+    return {
+        id: dbCampaign.id,
+        userId: dbCampaign.user_id,
+        subscriptionId: dbCampaign.subscription_id,
+        isTrialCampaign: dbCampaign.is_trial_campaign,
+        createdAt: dbCampaign.created_at,
+        updatedAt: dbCampaign.updated_at,
+        name: dbCampaign.name,
+        description: dbCampaign.description,
+        audienceQuery: dbCampaign.audience_query,
+        estimatedSize: dbCampaign.estimated_size,
+        keyAttributes: dbCampaign.key_attributes,
+        kpis: dbCampaign.kpis,
+        strategy: dbCampaign.strategy,
+        governancePlan: dbCampaign.governance_plan,
+        channelSelection: dbCampaign.channel_selection,
+        channelAssets: dbCampaign.channel_assets,
+        nodes: dbCampaign.nodes,
+    };
 };
+
+const mapCampaignToDbCampaign = (campaign: Partial<Campaign>): any => {
+    const dbCampaign: { [key: string]: any } = {};
+    if (campaign.id !== undefined) dbCampaign.id = campaign.id;
+    if (campaign.userId !== undefined) dbCampaign.user_id = campaign.userId;
+    if (campaign.subscriptionId !== undefined) dbCampaign.subscription_id = campaign.subscriptionId;
+    if (campaign.isTrialCampaign !== undefined) dbCampaign.is_trial_campaign = campaign.isTrialCampaign;
+    if (campaign.createdAt !== undefined) dbCampaign.created_at = campaign.createdAt;
+    if (campaign.updatedAt !== undefined) dbCampaign.updated_at = campaign.updatedAt;
+    if (campaign.name !== undefined) dbCampaign.name = campaign.name;
+    if (campaign.description !== undefined) dbCampaign.description = campaign.description;
+    if (campaign.audienceQuery !== undefined) dbCampaign.audience_query = campaign.audienceQuery;
+    if (campaign.estimatedSize !== undefined) dbCampaign.estimated_size = campaign.estimatedSize;
+    if (campaign.keyAttributes !== undefined) dbCampaign.key_attributes = campaign.keyAttributes;
+    if (campaign.kpis !== undefined) dbCampaign.kpis = campaign.kpis;
+    if (campaign.strategy !== undefined) dbCampaign.strategy = campaign.strategy;
+    if (campaign.governancePlan !== undefined) dbCampaign.governance_plan = campaign.governancePlan;
+    if (campaign.channelSelection !== undefined) dbCampaign.channel_selection = campaign.channelSelection;
+    if (campaign.channelAssets !== undefined) dbCampaign.channel_assets = campaign.channelAssets;
+    if (campaign.nodes !== undefined) dbCampaign.nodes = campaign.nodes;
+    return dbCampaign;
+};
+
+const mapDbPlanToPlan = (dbPlan: any): SubscriptionPlan => ({
+    id: dbPlan.id,
+    name: dbPlan.name,
+    planCode: dbPlan.plan_code,
+    monthlyPrice: dbPlan.monthly_price,
+    billingCycleMonths: dbPlan.billing_cycle_months,
+    campaignQuota: dbPlan.campaign_quota,
+    quotaPeriodDays: dbPlan.quota_period_days,
+    annualPrice: dbPlan.annual_price,
+    annualDiscountPercent: dbPlan.annual_discount_percent,
+    isActive: dbPlan.is_active,
+});
+
+const mapDbSubToSub = (dbSub: any): UserSubscription => ({
+    id: dbSub.id,
+    userId: dbSub.user_id,
+    planId: dbSub.plan_id,
+    plan: dbSub.subscription_plans ? mapDbPlanToPlan(dbSub.subscription_plans) : undefined,
+    billingType: dbSub.billing_type,
+    status: dbSub.status,
+    startDate: dbSub.start_date,
+    currentPeriodStart: dbSub.current_period_start,
+    currentPeriodEnd: dbSub.current_period_end,
+    nextBillingDate: dbSub.next_billing_date,
+    cancellationDate: dbSub.cancellation_date,
+    campaignsUsedCurrentPeriod: dbSub.campaigns_used_current_period,
+    campaignQuota: dbSub.campaign_quota,
+    quotaResetDate: dbSub.quota_reset_date,
+    autoRenew: dbSub.auto_renew,
+});
+
+const mapSubToDbSub = (sub: Omit<UserSubscription, 'id' | 'plan'>): any => ({
+    user_id: sub.userId,
+    plan_id: sub.planId,
+    billing_type: sub.billingType,
+    status: sub.status,
+    start_date: sub.startDate,
+    current_period_start: sub.currentPeriodStart,
+    current_period_end: sub.currentPeriodEnd,
+    next_billing_date: sub.nextBillingDate,
+    cancellation_date: sub.cancellationDate,
+    campaigns_used_current_period: sub.campaignsUsedCurrentPeriod,
+    campaign_quota: sub.campaignQuota,
+    quota_reset_date: sub.quotaResetDate,
+    auto_renew: sub.autoRenew,
+});
 
 
 export const databaseService = {
-    // --- User Methods ---
-    async findUserByEmail(email: string): Promise<User | null> {
-        await _simulateLatency();
-        const db = _getDb();
-        const normalizedEmail = email.toLowerCase();
-        return db.users[normalizedEmail] || null;
-    },
+    // --- Profile Methods (replaces User methods) ---
+    async getProfile(id: string): Promise<User | null> {
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-    async findUserById(id: string): Promise<User | null> {
-        await _simulateLatency();
-        const db = _getDb();
-        return Object.values(db.users).find(u => u.id === id) || null;
-    },
-
-    async createUser(data: { fullName: string; email: string; password?: string; authProvider: AuthProvider; channelConnections: Record<string, any> }): Promise<User> {
-        await _simulateLatency();
-        const db = _getDb();
-        const normalizedEmail = data.email.toLowerCase();
-        if (db.users[normalizedEmail]) {
-            throw new Error('User already exists.');
-        }
-
-        const now = new Date();
-        const trialEndDate = new Date(now);
-        trialEndDate.setDate(now.getDate() + 7);
-
-        const newUser: User = {
-            id: `user_${Date.now()}`,
-            fullName: data.fullName,
-            email: normalizedEmail,
-            // Use provided password or a random one for OAuth users
-            passwordHash: mockHash(data.password || `social_${Date.now()}`),
-            role: 'User', // Assign default role
-            createdAt: now.toISOString(),
-            lastLogin: now.toISOString(),
-            authProvider: data.authProvider,
-            channelConnections: data.channelConnections,
-            accountStatus: 'trial',
-            trialStartDate: now.toISOString(),
-            trialEndDate: trialEndDate.toISOString(),
-            trialCampaignsUsed: 0,
-            activeSubscription: null,
-        };
-
-        db.users[normalizedEmail] = newUser;
-        _saveDb(db);
-        return newUser;
-    },
-    
-    async updateUser(updatedUser: User): Promise<User> {
-        await _simulateLatency();
-        const db = _getDb();
-        if (!db.users[updatedUser.email]) {
-            // Find by ID if email has changed
-            const oldUser = Object.values(db.users).find(u => u.id === updatedUser.id);
-            if(oldUser && oldUser.email !== updatedUser.email) {
-                delete db.users[oldUser.email]; // remove old email key
-            } else if (!oldUser) {
-                throw new Error("User not found for update.");
+        if (error) {
+            if (error.code === 'PGRST116') { // 'exact one row' error for non-existent profiles
+                return null;
             }
-        }
-        db.users[updatedUser.email] = updatedUser;
-        _saveDb(db);
-        return updatedUser;
-    },
-
-    async updateUserProfile(userId: string, updates: { fullName?: string; email?: string }): Promise<User> {
-        await _simulateLatency();
-        const db = _getDb();
-        const user = await this.findUserById(userId);
-        if(!user) throw new Error("User not found.");
-
-        const updatedUser = { ...user, ...updates };
-        
-        // If email changed, we need to re-key the user in our mock DB
-        if(updates.email && updates.email.toLowerCase() !== user.email) {
-            delete db.users[user.email];
-            if(db.users[updates.email.toLowerCase()]) {
-                throw new Error("New email address is already in use.");
+            console.error("Error fetching profile:", error.message);
+            if (error.message.includes("does not exist") || error.message.includes("schema cache")) {
+                 throw new Error("Database setup incomplete: The 'profiles' table is missing. Please run the setup SQL script provided in the instructions.");
             }
-            db.users[updates.email.toLowerCase()] = updatedUser;
-        } else {
-            db.users[user.email] = updatedUser;
+            throw new Error(error.message); // Rethrow other unexpected errors
         }
-
-        _saveDb(db);
-        return updatedUser;
+        return data ? mapDbProfileToUser(data) : null;
     },
 
-    async updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-        await _simulateLatency();
-        const db = _getDb();
-        const user = await this.findUserById(userId);
+    async createProfile(profileData: Partial<User>): Promise<User | null> {
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const dbProfile = mapUserToDbProfile(profileData);
 
-        if(!user) throw new Error("User not found.");
-        if(user.passwordHash !== mockHash(currentPassword)) {
-            throw new Error("Incorrect current password.");
+        const { data, error } = await supabase
+            .from('profiles')
+            .insert([dbProfile])
+            .select()
+            .single();
+
+        if (error) {
+            if (error.message.includes("does not exist") || error.message.includes("schema cache")) {
+                 throw new Error("Database setup incomplete: The 'profiles' table is missing. Please run the setup SQL script in your Supabase project's SQL Editor.");
+            }
+            console.error("Error creating profile:", error.message);
+            throw new Error(error.message);
         }
+        return data ? mapDbProfileToUser(data) : null;
+    },
+
+    async updateProfile(id: string, updates: Partial<User>): Promise<User | null> {
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const dbUpdates = mapUserToDbProfile(updates);
+        dbUpdates.updated_at = new Date().toISOString();
         
-        user.passwordHash = mockHash(newPassword);
-        db.users[user.email] = user;
-        _saveDb(db);
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(dbUpdates)
+            .eq('id', id)
+            .select()
+            .single();
+        
+        if (error) {
+            console.error("Error updating profile:", error.message);
+            throw new Error(error.message);
+        }
+        return data ? mapDbProfileToUser(data) : null;
     },
     
     // --- Campaign Methods ---
     async getCampaignsForUser(userId: string): Promise<Campaign[]> {
-        await _simulateLatency();
-        const db = _getDb();
-        return Object.values(db.campaigns)
-            .filter(c => c.userId === userId)
-            .sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime());
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { data, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching campaigns:', error.message);
+            throw new Error(error.message);
+        }
+        return (data || []).map(mapDbCampaignToCampaign);
     },
 
     async saveCampaign(userId: string, campaignData: Campaign): Promise<Campaign> {
-        await _simulateLatency();
-        const db = _getDb();
-        const now = new Date().toISOString();
+        if (!supabase) throw new Error("Supabase is not configured.");
         
-        if (campaignData.id && db.campaigns[campaignData.id]) {
+        const dbCampaign = mapCampaignToDbCampaign(campaignData);
+        dbCampaign.updated_at = new Date().toISOString();
+
+        if (campaignData.id) {
             // Update existing campaign
-            const updatedCampaign = {
-                ...campaignData,
-                updatedAt: now,
-            };
-            db.campaigns[campaignData.id] = updatedCampaign;
-            _saveDb(db);
-            return updatedCampaign;
+            const { id, ...updateData } = dbCampaign;
+            const { data, error } = await supabase
+                .from('campaigns')
+                .update(updateData)
+                .eq('id', campaignData.id)
+                .select()
+                .single();
+            
+            if (error) {
+                console.error('Error updating campaign:', error.message);
+                throw new Error(error.message);
+            }
+            return mapDbCampaignToCampaign(data);
+
         } else {
-            // This path should ideally not be hit if we create campaign on generation
-            const newCampaign: Campaign = {
-                ...campaignData,
-                id: campaignData.id || `camp_${Date.now()}`,
-                userId: userId,
-                createdAt: now,
-                updatedAt: now,
-            };
-            db.campaigns[newCampaign.id!] = newCampaign;
-            _saveDb(db);
-            return newCampaign;
+            // This path is for creating a new campaign after generation
+            dbCampaign.user_id = userId;
+             const { data, error } = await supabase
+                .from('campaigns')
+                .insert([dbCampaign])
+                .select()
+                .single();
+            
+            if (error) {
+                console.error('Error creating campaign:', error.message);
+                throw new Error(error.message);
+            }
+            return mapDbCampaignToCampaign(data);
         }
     },
      async createCampaign(campaignData: Omit<Campaign, 'id'>): Promise<Campaign> {
-        await _simulateLatency();
-        const db = _getDb();
-        const now = new Date().toISOString();
-        
-        const newCampaign: Campaign = {
-            ...campaignData,
-            id: `camp_${Date.now()}`,
-            createdAt: now,
-            updatedAt: now,
-        };
-        db.campaigns[newCampaign.id] = newCampaign;
-        _saveDb(db);
-        return newCampaign;
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const dbCampaign = mapCampaignToDbCampaign(campaignData);
+        const { data, error } = await supabase
+            .from('campaigns')
+            .insert([dbCampaign])
+            .select()
+            .single();
+            
+        if (error) {
+            console.error('Error creating campaign:', error.message);
+            throw new Error(error.message);
+        }
+        return mapDbCampaignToCampaign(data);
     },
     
     async deleteCampaign(campaignId: string): Promise<void> {
-        await _simulateLatency();
-        const db = _getDb();
-        if (!db.campaigns[campaignId]) {
-            throw new Error("Campaign not found.");
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { error } = await supabase
+            .from('campaigns')
+            .delete()
+            .eq('id', campaignId);
+        
+        if (error) {
+            console.error('Error deleting campaign:', error.message);
+            throw new Error(error.message);
         }
-        delete db.campaigns[campaignId];
-        _saveDb(db);
     },
 
     // --- Subscription Methods ---
     async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-        await _simulateLatency();
-        const db = _getDb();
-        return Object.values(db.subscription_plans).filter(p => p.isActive);
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { data, error } = await supabase
+            .from('subscription_plans')
+            .select('*')
+            .eq('is_active', true)
+            .order('monthly_price', { ascending: true });
+        
+        if (error) {
+            console.error("Error fetching subscription plans:", error.message);
+            throw new Error(error.message);
+        }
+        return data.map(mapDbPlanToPlan);
     },
 
     async findPlanByCode(planCode: PlanCode): Promise<SubscriptionPlan | null> {
-        await _simulateLatency();
-        const db = _getDb();
-        return Object.values(db.subscription_plans).find(p => p.planCode === planCode) || null;
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { data, error } = await supabase
+            .from('subscription_plans')
+            .select('*')
+            .eq('plan_code', planCode)
+            .single();
+        
+        if (error) {
+            if (error.code === 'PGRST116') return null; // Not found is not an error
+            console.error(`Error finding plan by code ${planCode}:`, error.message);
+            throw new Error(error.message);
+        }
+        return data ? mapDbPlanToPlan(data) : null;
     },
 
     async getActiveSubscriptionForUser(userId: string): Promise<UserSubscription | null> {
-        await _simulateLatency();
-        const db = _getDb();
-        const subscriptions = Object.values(db.user_subscriptions)
-            .filter(s => s.userId === userId && s.status === 'active')
-            .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-        return subscriptions[0] || null;
+         if (!supabase) throw new Error("Supabase is not configured.");
+        const { data, error } = await supabase
+            .from('user_subscriptions')
+            .select('*, subscription_plans(*)') // Join with plans
+            .eq('user_id', userId)
+            .in('status', ['active', 'past_due'])
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null; // Not found is not an error
+            console.error(`Error fetching active sub for user ${userId}:`, error.message);
+            throw new Error(error.message);
+        }
+        return data ? mapDbSubToSub(data) : null;
     },
 
     async createSubscription(subData: Omit<UserSubscription, 'id' | 'plan'>): Promise<UserSubscription> {
-        await _simulateLatency();
-        const db = _getDb();
-        const newSub: UserSubscription = {
-            ...subData,
-            id: `sub_${Date.now()}`,
-        };
-        db.user_subscriptions[newSub.id] = newSub;
-        _saveDb(db);
-        return newSub;
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const dbSubData = mapSubToDbSub(subData);
+        const { data, error } = await supabase
+            .from('user_subscriptions')
+            .insert([dbSubData])
+            .select('*, subscription_plans(*)')
+            .single();
+
+        if (error) {
+            console.error('Error creating subscription:', error.message);
+            throw new Error(error.message);
+        }
+        return mapDbSubToSub(data);
     },
 
     async updateSubscription(updatedSub: UserSubscription): Promise<UserSubscription> {
-        await _simulateLatency();
-        const db = _getDb();
-        if (!db.user_subscriptions[updatedSub.id]) {
-            throw new Error("Subscription not found for update.");
+        if (!supabase) throw new Error("Supabase is not configured.");
+        const { id, plan, ...subData } = updatedSub;
+        const dbSubData = mapSubToDbSub(subData as Omit<UserSubscription, 'id' | 'plan'>);
+        
+        const { data, error } = await supabase
+            .from('user_subscriptions')
+            .update(dbSubData)
+            .eq('id', id)
+            .select('*, subscription_plans(*)')
+            .single();
+        
+        if (error) {
+            console.error('Error updating subscription:', error.message);
+            throw new Error(error.message);
         }
-        db.user_subscriptions[updatedSub.id] = updatedSub;
-        _saveDb(db);
-        return updatedSub;
+        return mapDbSubToSub(data);
     }
 };

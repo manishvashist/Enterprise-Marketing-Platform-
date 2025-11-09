@@ -49,12 +49,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
 
     try {
       await authService.register({ fullName, email, password });
-      setSuccess('Registration successful! Redirecting to sign in...');
-      setTimeout(() => {
-        onRegisterSuccess();
-      }, 2000);
+      setSuccess('Registration successful! Please check your email to confirm your account.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } finally {
       setIsLoading(false);
     }
   };

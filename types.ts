@@ -330,13 +330,13 @@ export interface UsageInfo {
 
 // --- UPDATED User type ---
 export type UserRole = 'Admin' | 'Manager' | 'User';
-export type AuthProvider = 'email' | 'google' | 'github' | 'microsoft' | 'facebook';
+// FIX: Changed 'microsoft' to 'azure' to align with Supabase's OAuth provider name.
+export type AuthProvider = 'email' | 'google' | 'github' | 'azure' | 'facebook';
 
 export interface User {
   id: string;
   fullName: string;
   email: string;
-  passwordHash: string; // In a real app, this would never be sent to the client. For simulation only.
   role: UserRole;
   createdAt: string;
   lastLogin: string;

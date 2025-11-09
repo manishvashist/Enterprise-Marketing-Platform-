@@ -2,6 +2,7 @@
 import React from 'react';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
 import { User, UsageInfo } from '../types';
+import { FolderOpenIcon } from './icons/FolderOpenIcon';
 
 interface CampaignInputProps {
   user: User;
@@ -43,11 +44,11 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
       <button
         onClick={() => onToggleRecording(field)}
         disabled={isLoading}
-        className={`absolute right-3 bottom-3 p-2 rounded-full transition-colors ${
+        className={`absolute right-3 bottom-3 p-2 rounded-full transition-all duration-300 ${
           isRecording 
-            ? 'bg-purple-600 text-white animate-pulse-ring' 
-            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
+            ? 'bg-indigo-600 text-white animate-pulse-ring scale-110' 
+            : 'bg-slate-700 text-gray-400 hover:bg-slate-600 hover:text-white'
+        } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
         aria-label={isRecording ? `Stop recording ${field}` : `Start recording ${field}`}
       >
         <MicrophoneIcon className="w-5 h-5" />
@@ -68,10 +69,11 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-semibold mb-4 text-indigo-300">Generative Campaign Builder</h2>
+    <div className="bg-slate-800/50 rounded-xl shadow-lg p-6 md:p-8 border border-white/10">
+      <h2 className="text-2xl font-bold mb-1 text-white">Generative Campaign Builder</h2>
+      <p className="text-gray-400 mb-6">Define your goal and audience to let our AI build your next campaign.</p>
       
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="relative">
           <label htmlFor="campaign-goal" className="block text-sm font-medium text-gray-300 mb-2">
             1. Describe your campaign goal
@@ -81,8 +83,8 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
             value={goalPrompt}
             onChange={(e) => setGoalPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`e.g., "Increase e-commerce sales by 15% in Q3" or "Drive app downloads for a new fitness tracker"`}
-            className="w-full h-24 p-4 pr-14 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
+            placeholder={`e.g., "Increase e-commerce sales by 15% in Q3"`}
+            className="w-full h-32 p-4 pr-14 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
             disabled={isLoading}
           />
           <MicButton field="goal" />
@@ -90,40 +92,41 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
 
         <div className="relative">
             <label htmlFor="target-audience" className="block text-sm font-medium text-gray-300 mb-2">
-                2. Define your target audience (using AI Smart Segments)
+                2. Define your target audience
             </label>
             <textarea
                 id="target-audience"
                 value={audiencePrompt}
                 onChange={(e) => setAudiencePrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={`e.g., "Customers who viewed product X but didn't purchase in the last 30 days"`}
-                className="w-full h-24 p-4 pr-14 bg-gray-900 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
+                placeholder={`e.g., "Customers who viewed product X but didn't purchase"`}
+                className="w-full h-32 p-4 pr-14 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none text-gray-200 placeholder-gray-500"
                 disabled={isLoading}
             />
             <MicButton field="audience" />
         </div>
       </div>
 
-      <div className="mt-6 flex justify-between items-center">
-        <p className="text-xs text-gray-500">
-            Press <kbd className="font-sans px-1.5 py-0.5 border border-gray-600 rounded">Ctrl</kbd> + <kbd className="font-sans px-1.5 py-0.5 border border-gray-600 rounded">Enter</kbd> to generate.
+      <div className="mt-8 flex justify-between items-center">
+        <p className="text-xs text-gray-500 hidden sm:block">
+            Pro-tip: Use <kbd className="font-sans px-1.5 py-0.5 border border-slate-600 rounded bg-slate-700/50">Ctrl</kbd> + <kbd className="font-sans px-1.5 py-0.5 border border-slate-600 rounded bg-slate-700/50">Enter</kbd> to generate.
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
             {user.role !== 'User' && (
                 <button
                     onClick={onToggleLoadModal}
                     disabled={isLoading}
-                    className="px-6 py-2.5 bg-gray-700 text-white font-semibold rounded-md hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
+                    className="px-4 py-2.5 bg-slate-700 text-white font-semibold rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    Load Campaign
+                    <FolderOpenIcon className="w-5 h-5" />
+                    <span className="hidden md:inline">Load Campaign</span>
                 </button>
             )}
-            <div className="relative" title={generateButtonTooltip()}>
+            <div className="relative w-full sm:w-auto" title={generateButtonTooltip()}>
                 <button
                   onClick={onGenerate}
                   disabled={isGenerateDisabled}
-                  className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                  className="w-full px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/20 hover:shadow-xl hover:shadow-indigo-600/30 flex items-center justify-center"
                 >
                   {isLoading ? (
                     <>
@@ -134,7 +137,7 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
                       Generating...
                     </>
                   ) : (
-                    'Generate Campaign'
+                    '✨ Generate Campaign'
                   )}
                 </button>
             </div>
@@ -146,9 +149,9 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
 
 const styles = `
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(129, 140, 248, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(165, 180, 252, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(165, 180, 252, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(165, 180, 252, 0); }
 }
 .animate-pulse-ring {
   animation: pulse-ring 1.5s infinite;

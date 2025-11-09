@@ -21,8 +21,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
     setError(null);
 
     try {
-      const user = await authService.login(email, password);
-      onLogin(user);
+      await authService.login(email, password);
+      // onLogin(user) is no longer needed; onAuthStateChange handles it.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       setIsLoading(false);
