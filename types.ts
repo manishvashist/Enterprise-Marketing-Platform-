@@ -1,4 +1,5 @@
 
+
 export enum NodeType {
   TRIGGER = 'TRIGGER',
   ACTION = 'ACTION',
@@ -348,4 +349,17 @@ export interface User {
   trialEndDate: string | null;
   trialCampaignsUsed: number;
   activeSubscription: UserSubscription | null;
+}
+
+// --- NEW TYPES for Media Plan ---
+export interface MediaPlanInputs {
+    campaignName: string;
+    objectives: string;
+    audience: string;
+    geo: string;
+    industry: string;
+    product: string;
+    competitors: string;
+    keywords: string;
+    duration: string;
 }

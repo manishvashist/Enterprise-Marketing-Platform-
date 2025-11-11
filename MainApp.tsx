@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { CampaignInput } from './CampaignInput';
@@ -22,6 +24,7 @@ interface MainAppProps {
     user: User;
     onLogout: () => void;
     onUserUpdate: (user: User) => void;
+    onSetGlobalSuccess: (message: string | null) => void;
 }
 
 const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setView }) => (
@@ -42,7 +45,7 @@ const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setVi
     </div>
 );
 
-export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }) => {
+export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, onSetGlobalSuccess }) => {
   const [view, setView] = useState<AppView>('campaign');
   const [initialBillingTab, setInitialBillingTab] = useState<BillingSubView>('subscription');
   const [goalPrompt, setGoalPrompt] = useState<string>('');
@@ -481,7 +484,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate }
                 </>
             );
         case 'billing':
-            return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} />;
+            return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} onSetGlobalSuccess={onSetGlobalSuccess} />;
         case 'admin':
             return user.role === 'Admin' ? <div><h1 className="text-white text-2xl">Admin Dashboard</h1><p className="text-gray-400">User management and system settings will be here.</p></div> : null;
         default:

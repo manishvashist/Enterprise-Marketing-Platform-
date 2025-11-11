@@ -8,8 +8,8 @@ import { createClient } from '@supabase/supabase-js';
 // 3. IMPORTANT: Go to "Authentication" > "Providers" and enable Email. Disable "Confirm email" for easier testing.
 // 4. Go to the "SQL Editor" in your project and run the setup SQL from the app's setup screen to create your database tables.
 
-const supabaseUrl = "https://nrowevlicvigibnormgz.supabase.co";
-const supabaseAnonKey = "sb_publishable_O3BmQJmLkyvKX2nDIF3Q0g_YkUj6NZ-";
+const supabaseUrl = 'https://nrowevlicvigibnormgz.supabase.co';
+const supabaseAnonKey = 'sb_publishable_O3BmQJmLkyvKX2nDIF3Q0g_YkUj6NZ-';
 
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'));
 

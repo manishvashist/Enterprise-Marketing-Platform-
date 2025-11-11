@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useMemo } from 'react';
 import { User } from '../../types';
 import { authService } from '../../services/authService';
@@ -6,6 +8,7 @@ import { authService } from '../../services/authService';
 interface ProfileSettingsProps {
     user: User;
     onUserUpdate: (user: User) => void;
+    onSetGlobalSuccess: (message: string | null) => void;
 }
 
 const passwordStrength = (password: string) => {
@@ -18,17 +21,17 @@ const passwordStrength = (password: string) => {
   return score;
 };
 
-export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUpdate }) => {
+export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUpdate, onSetGlobalSuccess }) => {
     const [fullName, setFullName] = useState(user.fullName);
     const [email, setEmail] = useState(user.email);
     const [isProfileLoading, setIsProfileLoading] = useState(false);
-    const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [profileError, setProfileError] = useState<string | null>(null);
 
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-    const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     const strength = useMemo(() => passwordStrength(newPassword), [newPassword]);
     const passwordMatch = useMemo(() => newPassword && newPassword === confirmPassword, [newPassword, confirmPassword]);
@@ -36,13 +39,14 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUp
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProfileLoading(true);
-        setProfileMessage(null);
+        setProfileError(null);
+        onSetGlobalSuccess(null); // Clear previous success messages
         try {
             const updatedUser = await authService.updateProfile(user.id, { fullName, email });
             onUserUpdate(updatedUser);
-            setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+            onSetGlobalSuccess('Profile updated successfully!');
         } catch (err) {
-            setProfileMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update profile.' });
+            setProfileError(err instanceof Error ? err.message : 'Failed to update profile.');
         } finally {
             setIsProfileLoading(false);
         }
@@ -50,26 +54,26 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUp
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
+        setPasswordError(null);
+        onSetGlobalSuccess(null);
+
         if(strength < 4) {
-            setPasswordMessage({ type: 'error', text: 'New password is too weak.' });
+            setPasswordError('New password is too weak.');
             return;
         }
         if(!passwordMatch) {
-            setPasswordMessage({ type: 'error', text: 'New passwords do not match.' });
+            setPasswordError('New passwords do not match.');
             return;
         }
+
         setIsPasswordLoading(true);
-        setPasswordMessage(null);
         try {
             await authService.changePassword(user.id, currentPassword, newPassword);
-            setPasswordMessage({ type: 'success', text: 'Password changed successfully!' });
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            onSetGlobalSuccess('Password changed successfully! You have been logged out for security. Please log in again.');
+            // No need to reset loading state to false; the component will unmount upon logout.
         } catch (err) {
-            setPasswordMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to change password.' });
-        } finally {
-            setIsPasswordLoading(false);
+            setPasswordError(err instanceof Error ? err.message : 'Failed to change password.');
+            setIsPasswordLoading(false); // Reset loading state only on error.
         }
     };
 
@@ -92,7 +96,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUp
                     <InputField label="Full Name" id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} />
                     <InputField label="Email Address" id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
-                 {profileMessage && <ResponseMessage message={profileMessage} />}
+                 {profileError && <p className={`text-sm text-center mt-4 text-red-400`}>{profileError}</p>}
                 <div className="mt-6 text-right">
                     <button type="submit" disabled={isProfileLoading} className="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600">
                         {isProfileLoading ? 'Saving...' : 'Save Changes'}
@@ -120,7 +124,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ user, onUserUp
                         <InputField label="Confirm New Password" id="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                          className={`${confirmPassword.length > 0 ? (passwordMatch ? 'border-green-500/50' : 'border-red-500/50') : 'border-gray-600'}`} />
                     </div>
-                     {passwordMessage && <ResponseMessage message={passwordMessage} />}
+                     {passwordError && <p className={`text-sm text-center mt-4 text-red-400`}>{passwordError}</p>}
                     <div className="mt-6 text-right">
                         <button type="submit" disabled={isPasswordLoading} className="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600">
                             {isPasswordLoading ? 'Updating...' : 'Change Password'}
@@ -149,8 +153,4 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
             className={`w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 ${props.className || ''}`}
         />
     </div>
-);
-
-const ResponseMessage: React.FC<{ message: {type: 'success' | 'error', text: string} }> = ({ message }) => (
-     <p className={`text-sm text-center mt-4 ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{message.text}</p>
 );

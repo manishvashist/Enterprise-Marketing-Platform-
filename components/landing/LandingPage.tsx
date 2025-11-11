@@ -110,9 +110,9 @@ const LandingHeader: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial })
     <header className="absolute top-0 left-0 right-0 z-30 py-4">
         <div className="container mx-auto px-6 flex justify-between items-center">
             <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" opacity=".5"/>
-                    <path d="M12 5c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.82m5.84-2.56a6 6 0 01-2.56 5.84m-2.56-5.84a6 6 0 01-5.84-2.56m11.2 0a6 6 0 01-5.84 2.56M12 21a9 9 0 110-18 9 9 0 010 18z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 10.5h6m-3.75-3.75v7.5" />
                 </svg>
                 <h1 className="text-xl font-bold text-white tracking-tight">AI Campaign Generator</h1>
             </div>
@@ -147,7 +147,7 @@ const HeroSection: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial }) =
         </div>
         <AnimatedSection>
             <div className="relative mt-16">
-                 <img src="https://i.imgur.com/sC36w6q.png" alt="Platform Interface" className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl shadow-indigo-900/50 border border-gray-700" />
+                 <img src="https://assets.aceternity.com/demos/tailwind/dashboard.png" alt="Platform Interface" className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl shadow-indigo-900/50 border border-gray-700" />
                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
             </div>
         </AnimatedSection>

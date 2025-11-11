@@ -1,6 +1,5 @@
 
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { authService } from './services/authService';
 import { subscriptionService } from './services/subscriptionService';
 import { User } from './types';
@@ -233,12 +232,21 @@ const App: React.FC = () => {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [view, setView] = useState<'landing' | 'auth' | 'app'>('landing');
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
   const [databaseError, setDatabaseError] = useState<string | null>(null);
+  const isLoggingOutRef = useRef(false);
 
-  const fetchUserWithSubscription = async (baseUser: User): Promise<User> => {
+  const fetchUserWithSubscription = useCallback(async (baseUser: User): Promise<User> => {
     const subscription = await subscriptionService.getSubscriptionForUser(baseUser.id);
     return { ...baseUser, activeSubscription: subscription };
-  };
+  }, []);
+
+  useEffect(() => {
+    if (globalSuccess) {
+        const timer = setTimeout(() => setGlobalSuccess(null), 5000);
+        return () => clearTimeout(timer);
+    }
+  }, [globalSuccess]);
 
   useEffect(() => {
     const getInitialSession = async () => {
@@ -267,6 +275,16 @@ const App: React.FC = () => {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // If a logout is in progress, ignore any intermediate events (like USER_UPDATED after a password change)
+        // that might incorrectly try to log the user back in. Wait for the definitive SIGNED_OUT.
+        if (isLoggingOutRef.current && event !== 'SIGNED_OUT') {
+            return;
+        }
+
+        if (event === 'SIGNED_OUT') {
+            isLoggingOutRef.current = false;
+        }
+
         setGlobalError(null); 
         setDatabaseError(null);
         try {
@@ -274,7 +292,7 @@ const App: React.FC = () => {
             if (currentUser) {
                 const fullUser = await fetchUserWithSubscription(currentUser);
                 setUser(fullUser);
-                if (view !== 'app') setView('app');
+                setView('app');
             } else {
                 setUser(null);
                 setView('landing');
@@ -293,6 +311,7 @@ const App: React.FC = () => {
                 setView('landing');
             }
         } finally {
+            // FIX: Corrected state setter function from setIsLoading to setIsLoadingSession.
             if (isLoadingSession) setIsLoadingSession(false);
         }
     });
@@ -307,14 +326,23 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    await authService.logout();
-    // onAuthStateChange will handle cleanup
-  }, []);
+    isLoggingOutRef.current = true;
+    try {
+      await authService.logout();
+      // The onAuthStateChange listener is now the single source of truth for UI updates on logout.
+      // This prevents race conditions between manual state updates here and listener-driven updates.
+    } catch (err) {
+      console.error("Logout failed:", err);
+      setGlobalError("Logout failed. Please try again.");
+      // If the logout API call fails, we must reset the flag to allow subsequent attempts.
+      isLoggingOutRef.current = false;
+    }
+  }, [setGlobalError]);
   
   const handleUserUpdate = useCallback(async (updatedUser: User) => {
      const fullUser = await fetchUserWithSubscription(updatedUser);
      setUser(fullUser);
-  }, []);
+  }, [fetchUserWithSubscription]);
 
   if (databaseError) {
       return <DatabaseSetupError error={databaseError} />;
@@ -339,7 +367,7 @@ const App: React.FC = () => {
           return <AuthPage onLogin={handleLogin} onBackToHome={() => setView('landing')} />;
       case 'app':
           if (user) {
-              return <MainApp user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />;
+              return <MainApp user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} onSetGlobalSuccess={setGlobalSuccess} />;
           }
           // Fallback if user is somehow null
           setView('landing');
@@ -355,6 +383,16 @@ const App: React.FC = () => {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-red-800/90 backdrop-blur-sm border border-red-600 text-white p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
             <span>{globalError}</span>
             <button onClick={() => setGlobalError(null)} className="p-1 rounded-full hover:bg-red-700/50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+      )}
+      {globalSuccess && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-green-800/90 backdrop-blur-sm border border-green-600 text-white p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
+            <span>{globalSuccess}</span>
+            <button onClick={() => setGlobalSuccess(null)} className="p-1 rounded-full hover:bg-green-700/50 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>

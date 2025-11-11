@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 // FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
 import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
@@ -15,6 +14,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { CampaignExecutionManager } from './CampaignExecutionManager';
 import { ConfirmationModal } from './ConfirmationModal';
 import { DocumentDuplicateIcon, DocumentArrowDownIcon, PencilSquareIcon, InformationCircleIcon } from './icons/HeroIcons';
+import { MediaPlanView } from './media_plan/MediaPlanView';
 
 interface JourneyCanvasProps {
   user: User; // User is now required
@@ -32,9 +32,10 @@ interface JourneyCanvasProps {
   channelConnections: Record<string, ChannelConnection>;
   onSaveCampaign: () => void;
   isSaving: boolean;
+  onSetGlobalSuccess: (message: string | null) => void;
 }
 
-type CanvasTab = 'overview' | 'journey' | 'governance' | 'channels' | 'assets' | 'launchpad';
+type CanvasTab = 'overview' | 'journey' | 'governance' | 'channels' | 'mediaPlan' | 'assets' | 'launchpad';
 
 const BranchConnector: React.FC<{ label: string }> = ({ label }) => {
     if (!label) return null;
@@ -161,6 +162,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     channelConnections,
     onSaveCampaign,
     isSaving,
+    onSetGlobalSuccess,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -281,17 +283,15 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     return 'Unsaved';
   };
 
-  const tabs: { id: CanvasTab, label: string }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'journey', label: 'Journey Flow' },
-    { id: 'governance', label: 'Governance' },
-    { id: 'channels', label: 'Channel Strategy' },
-    { id: 'assets', label: 'Creative Assets' },
+  const tabs: { id: CanvasTab; label: string; visible: boolean }[] = [
+    { id: 'overview', label: 'Overview', visible: true },
+    { id: 'journey', label: 'Journey Flow', visible: true },
+    { id: 'governance', label: 'Governance', visible: true },
+    { id: 'channels', label: 'Channel Strategy', visible: true },
+    { id: 'mediaPlan', label: 'Media Plan', visible: !!campaign },
+    { id: 'assets', label: 'Creative Assets', visible: true },
+    { id: 'launchpad', label: 'Launchpad', visible: hasGeneratedAssets && user.role !== 'User' },
   ];
-
-  if (hasGeneratedAssets && user.role !== 'User') {
-    tabs.push({ id: 'launchpad', label: 'Launchpad' });
-  }
 
   const TabButton: React.FC<{id: CanvasTab, label: string}> = ({id, label}) => (
     <button
@@ -409,8 +409,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
         {/* Tabs for non-print view */}
         <div className="mb-6 no-print">
             <div className="border-b border-white/10">
-                <nav className="-mb-px flex space-x-4" aria-label="Tabs">
-                    {tabs.map(tab => <TabButton key={tab.id} id={tab.id} label={tab.label} />)}
+                <nav className="-mb-px flex space-x-2 overflow-x-auto" aria-label="Tabs">
+                    {tabs.filter(tab => tab.visible).map(tab => <TabButton key={tab.id} id={tab.id} label={tab.label} />)}
                 </nav>
             </div>
         </div>
@@ -432,6 +432,13 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
             )}
              {activeTab === 'governance' && campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
              {activeTab === 'channels' && campaign.channelSelection && <ChannelSelectionDashboard selection={campaign.channelSelection} />}
+             {activeTab === 'mediaPlan' && campaign && (
+                <MediaPlanView 
+                    user={user} 
+                    campaign={campaign} 
+                    onSetGlobalSuccess={onSetGlobalSuccess} 
+                />
+             )}
              {activeTab === 'assets' && (
                 <div className="space-y-8">
                      <AssetGenerationController

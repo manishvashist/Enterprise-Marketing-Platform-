@@ -1,4 +1,6 @@
 
+
+
 import { User, ConnectedAccount, AuthProvider } from '../types';
 import { databaseService } from './databaseService';
 import { supabase } from './supabaseClient';
@@ -177,10 +179,34 @@ export const authService = {
 
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     if (!supabase) throw new Error("Supabase is not configured.");
-    // Note: Supabase's client-side password update doesn't require the current password
-    // for security reasons (as the user is already authenticated).
-    // A server-side function could be used to enforce this check if required.
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) throw new Error(error.message);
+    
+    // 1. First, verify the current password is correct by trying to sign in.
+    // This makes the feature behave as the user expects and refreshes the session.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) {
+        throw new Error("User not found or email is missing. Cannot verify password.");
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+    });
+
+    if (signInError) {
+        // Provide a more specific error message for invalid credentials.
+        if (signInError.message.includes('Invalid login credentials')) {
+             throw new Error("The current password you entered is incorrect.");
+        }
+        throw new Error(`Password verification failed: ${signInError.message}`);
+    }
+
+    // 2. If verification is successful, update to the new password.
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) {
+        throw new Error(`Failed to update to new password: ${updateError.message}`);
+    }
+    
+    // 3. Explicitly sign out to ensure onAuthStateChange is triggered and session is cleared.
+    await this.logout();
   }
 };

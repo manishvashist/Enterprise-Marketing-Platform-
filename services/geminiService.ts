@@ -1,7 +1,9 @@
 
+
+
 // @google/genai Coding Guidelines: Do not import `LiveSession` as an explicit return type.
 import { GoogleGenAI, Type, Modality, LiveServerMessage, Blob } from '@google/genai';
-import { Campaign, NodeType, ChannelAssetGenerationResult, User } from '../types';
+import { Campaign, NodeType, ChannelAssetGenerationResult, User, MediaPlanInputs } from '../types';
 import { subscriptionService } from './subscriptionService';
 
 // Per coding guidelines, API key is assumed to be available in process.env.API_KEY.
@@ -341,7 +343,7 @@ const channelAssetGenerationSchema = {
 
 
 export const generateCampaignJourney = async (prompt: string, user: User): Promise<Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>> => {
-  const systemInstruction = `You are a world-class AI marketing platform, acting as an expert strategist and media planner. Your task is to transform a user's campaign request into a single, detailed, structured JSON object.
+  const systemInstruction = `You are a world-class AI Campaign Generator, acting as an expert strategist and media planner. Your task is to transform a user's campaign request into a single, detailed, structured JSON object.
 
 The user provides a 'Campaign Goal' and a 'Target Audience'.
 
@@ -450,21 +452,13 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
 };
 
 export const generateAssetsForChannel = async (campaign: Campaign, channelName: string, channelCategory: string): Promise<ChannelAssetGenerationResult> => {
-    const systemInstruction = `You are an AI assistant that ONLY outputs a single, valid JSON object. Your entire response must be a JSON object, without any surrounding text or markdown.
+    const systemInstruction = `You are an expert creative director AI. Your task is to generate comprehensive marketing assets for a specific channel based on a campaign strategy.
+Your entire response MUST be a single, valid JSON object that conforms to the provided schema. Do not include any markdown formatting or surrounding text.
 
-**CRITICAL RULE: ESCAPING QUOTES**
-You MUST escape any double quote (") character inside a JSON string value with a backslash (\\).
-- **VALID:** { "example": "He said, \\"Hello world!\\"" }
-- **INVALID:** { "example": "He said, "Hello world!"" }
-Before finalizing your response, you must review the entire JSON object and verify that every double quote within a string value is properly escaped.
-
-**SCHEMA & CONTENT RULES:**
-1.  The main 'content' object for any given asset represents "Variant A" of the creative.
-2.  The 'variants' array within the 'content' object should contain "Variant B", "Variant C", etc.
-3.  **MANDATORY:** Every object inside the 'variants' array MUST contain the actual alternative content. It MUST have at least one of the following fields populated with text: 'headline', 'bodyCopy', or 'caption'. A variant object containing only an 'id' and 'reasoning' is invalid and will be rejected.
-
-**TASK:**
-Act as an expert creative director. Generate comprehensive marketing assets for the SINGLE CHANNEL specified in the user prompt, based on the provided campaign strategy, and format the output according to the provided JSON schema.`;
+Key instructions:
+- The main 'content' object for an asset represents the primary version.
+- The 'variants' array should contain alternative versions for A/B testing. Each variant should have distinct content (e.g., a different headline or body copy) and a 'reasoning' for the variation.
+- For "Email Marketing", generate professional and engaging subject lines (as 'headline') and full email body copy (as 'bodyCopy'). Ensure the content is well-structured and persuasive.`;
 
     const prompt = `
 Generate platform-specific marketing assets for the channel specified below. The output must be a single, valid JSON object that conforms to the provided schema.
@@ -479,7 +473,7 @@ TARGET CHANNEL: ${channelName}
 CHANNEL CATEGORY: ${channelCategory}
 
 TASK:
-Generate a set of production-ready marketing assets. For each asset, create at least two A/B test variants with different creative approaches (e.g., different headlines, captions, or calls-to-action). The assets should be tailored specifically for the "${channelName}" platform, considering its best practices, formats, and user expectations.
+Generate a set of production-ready marketing assets. For each asset, create at least one A/B test variant with a different creative approach (e.g., different headlines or calls-to-action). The assets should be tailored specifically for the "${channelName}" platform, considering its best practices, formats, and user expectations.
 `;
 
     try {
@@ -662,4 +656,183 @@ export const startTranscriptionSession = (
     });
 
     return sessionPromise;
+};
+
+// --- Media Plan Functions ---
+
+export const generateMediaPlan = async (inputs: MediaPlanInputs): Promise<string> => {
+    const systemInstruction = `You are an expert media planner and digital marketing strategist. Your role is to create comprehensive, data-driven media plans based on the AI-prescribed campaign strategy. You analyze competitive landscapes, industry benchmarks, geographic factors, and keyword opportunities to recommend optimal budget allocations across channels.
+Structure all media plans using clear headers, tables where appropriate, and visual hierarchy. Use this format:
+# MEDIA PLAN: [Campaign Name]
+Generated: [Date]
+
+## 💰 BUDGET OVERVIEW
+**Recommended Total Budget:** $XXX,XXX
+**Campaign Duration:** [Timeframe]
+**Daily Average:** $X,XXX
+
+### Budget Rationale
+[2-3 paragraphs explaining how you arrived at this budget based on competitive analysis, sector benchmarks, geography, and keywords]
+
+---
+
+## 📊 CHANNEL ALLOCATION
+
+| Channel | Budget | % | Projected Impressions | Est. CPC/CPM | Expected Results |
+|---------|--------|---|----------------------|--------------|------------------|
+| [Channel] | $XX,XXX | XX% | X.XM | $X.XX | XXX conversions |
+
+---
+
+## 🎯 DETAILED CHANNEL STRATEGIES
+
+### 1. [CHANNEL NAME] - $XX,XXX (XX%)
+
+**Why This Channel:**
+[Strategic rationale]
+
+**Targeting Strategy:**
+- Audience: [Details]
+- Demographics: [Details]
+- Interests/Behaviors: [Details]
+- Geographic: [Details]
+
+**Expected Performance:**
+- Impressions: XXX,XXX
+- Clicks: XX,XXX
+- CTR: X.X%
+- Conversions: XXX
+- CPA: $XXX
+- ROAS: X:1
+
+**Creative Requirements:**
+- [Ad format 1]: [Specs]
+- [Ad format 2]: [Specs]
+
+**Flight Schedule:**
+[Timeline details]
+
+[Repeat for each channel]
+
+---
+
+## 📅 CAMPAIGN PACING
+
+### Monthly Breakdown
+| Month | Budget | Focus |
+|-------|--------|-------|
+| [Month 1] | $XX,XXX | Launch & Testing |
+| [Month 2] | $XX,XXX | Optimization |
+
+---
+
+## 🔄 OPTIMIZATION FRAMEWORK
+
+**Testing Budget:** $X,XXX (10% reserve)
+**Reallocation Triggers:**
+- If CPA exceeds $XXX: [Action]
+- If ROAS below X:1: [Action]
+
+---
+
+## ✅ SUCCESS METRICS & KPIs
+
+- Total Reach: X.XM people
+- Frequency: X.X
+- Total Conversions: X,XXX
+- Overall CPA: $XXX
+- Projected ROAS: X:1
+- Brand Lift: +XX%
+
+---
+
+**💡 Ready to adjust the budget? Just let me know your new total budget, and I'll recalculate the entire plan!**`;
+
+    const prompt = `Generate a media plan for the "${inputs.campaignName}" campaign based on the following context:
+- Campaign objectives and KPIs: ${inputs.objectives}
+- Target audience demographics and psychographics: ${inputs.audience}
+- Geographic markets: ${inputs.geo}
+- Industry/sector: ${inputs.industry}
+- Product/service category: ${inputs.product}
+- Key competitors: ${inputs.competitors}
+- Primary keywords and search terms: ${inputs.keywords}
+- Campaign duration: ${inputs.duration}
+`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: prompt,
+            config: {
+                systemInstruction,
+                temperature: 0.3,
+            },
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error calling Gemini API for media plan:", error);
+        throw new Error("Failed to generate media plan. The AI model may be experiencing issues.");
+    }
+};
+
+export const regenerateMediaPlanWithNewBudget = async (
+    originalPlan: string,
+    newBudget: string,
+    constraints: string
+): Promise<string> => {
+    const systemInstruction = `You are an expert media planner. Your task is to update an existing media plan with a new budget, following the user's constraints.
+When a user changes the budget:
+- Recalculate all metrics based on new allocations.
+- If DECREASED: Prioritize highest-ROI channels, reduce or eliminate lower performers.
+- If INCREASED: Expand reach in existing channels, add new channels if strategic.
+- Maintain strategic integrity and preserve testing budgets.
+- Output the updated plan using the specified "UPDATED MEDIA PLAN" format.
+- Provide clear changes and an impact analysis.
+- Your entire response should be the updated markdown plan.
+
+UPDATED MEDIA PLAN FORMAT:
+UPDATED MEDIA PLAN
+Original Budget: $[OLD] → New Budget: $[NEW] ([+/-]X%)
+
+CHANGES SUMMARY:
+✓ Channels Added: [List]
+✗ Channels Removed: [List]
+↑ Increased Allocation: [List with amounts]
+↓ Decreased Allocation: [List with amounts]
+
+[Full updated media plan with same structure as original]
+
+IMPACT ANALYSIS:
+- Expected reach change: [+/-]X%
+- Projected conversion change: [+/-]X%
+- Risk assessment: [Analysis of reduced/increased budget implications]
+`;
+    
+    const prompt = `
+Here is the original media plan:
+---
+${originalPlan}
+---
+
+Please update this plan with the following changes:
+- New total budget: ${newBudget}
+- Any channel priorities or constraints: ${constraints || 'None'}
+
+Follow the specified "UPDATED MEDIA PLAN" output format precisely, including a changes summary, impact analysis, and the full recalculated plan.
+`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: prompt,
+            config: {
+                systemInstruction,
+                temperature: 0.3,
+            },
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error calling Gemini API for media plan regeneration:", error);
+        throw new Error("Failed to regenerate media plan. The AI model may be experiencing issues.");
+    }
 };

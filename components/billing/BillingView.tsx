@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from 'react';
 import { User, UsageInfo, SubscriptionPlan } from '../../types';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -11,9 +13,10 @@ interface BillingViewProps {
     user: User;
     onSubscriptionChange: (updatedUser: User) => void;
     initialTab?: BillingSubView;
+    onSetGlobalSuccess: (message: string | null) => void;
 }
 
-export const BillingView: React.FC<BillingViewProps> = ({ user, onSubscriptionChange, initialTab }) => {
+export const BillingView: React.FC<BillingViewProps> = ({ user, onSubscriptionChange, initialTab, onSetGlobalSuccess }) => {
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
     const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -88,7 +91,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ user, onSubscriptionCh
             </div>
 
             {activeTab === 'subscription' && renderSubscriptionContent()}
-            {activeTab === 'profile' && <ProfileSettings user={user} onUserUpdate={onSubscriptionChange} />}
+            {activeTab === 'profile' && <ProfileSettings user={user} onUserUpdate={onSubscriptionChange} onSetGlobalSuccess={onSetGlobalSuccess} />}
         </div>
     );
 };
