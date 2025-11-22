@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
 import { User } from '../../types';
@@ -31,21 +30,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h2>
-      <p className="text-gray-400 text-center mb-6">Sign in to continue to your dashboard.</p>
+      <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Welcome Back</h2>
+      <p className="text-slate-500 text-center mb-6">Sign in to continue to your dashboard.</p>
       
       <SocialLogins onSocialLogin={onLogin} context="Sign in" />
 
       <div className="my-6 flex items-center">
-          <div className="flex-grow border-t border-gray-600"></div>
-          <span className="flex-shrink mx-4 text-gray-400 text-sm">Or with email</span>
-          <div className="flex-grow border-t border-gray-600"></div>
+          <div className="flex-grow border-t border-slate-200"></div>
+          <span className="flex-shrink mx-4 text-slate-400 text-sm">Or with email</span>
+          <div className="flex-grow border-t border-slate-200"></div>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <label htmlFor="email-login" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="email-login" className="block text-sm font-medium text-slate-700 mb-1">
               Email Address
             </label>
             <input
@@ -55,11 +54,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 placeholder-gray-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
           </div>
           <div>
-            <label htmlFor="password-login" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="password-login" className="block text-sm font-medium text-slate-700 mb-1">
               Password
             </label>
             <input
@@ -69,18 +68,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 placeholder-gray-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
           </div>
         </div>
         
-        {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
+        {error && <p className="text-red-600 text-sm text-center mt-4 bg-red-50 p-2 rounded border border-red-100">{error}</p>}
 
         <div className="mt-6">
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            className="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-md shadow-orange-600/20 hover:shadow-lg"
           >
             {isLoading ? (
               <>
@@ -95,9 +94,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
         </div>
       </form>
 
-      <p className="text-center text-sm text-gray-400 mt-6">
+      <p className="text-center text-sm text-slate-500 mt-6">
         Don't have an account?{' '}
-        <button onClick={onToggleView} className="font-medium text-indigo-400 hover:text-indigo-300">
+        <button onClick={onToggleView} className="font-medium text-orange-600 hover:text-orange-700">
           Sign up
         </button>
       </p>

@@ -14,7 +14,7 @@ const useScrollAnimation = () => {
       setElements(prev => new Map(prev).set(entries[0].target, entries[0]));
     }, {
       threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
+      rootMargin: '0px 0px -50px 0px'
     });
 
     return () => {
@@ -35,7 +35,7 @@ const useScrollAnimation = () => {
   return { observe, isVisible };
 };
 
-const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string; delay?: number }> = ({ children, className, delay = 0 }) => {
     const ref = useRef<HTMLDivElement>(null);
     const { observe, isVisible } = useScrollAnimation();
 
@@ -48,322 +48,311 @@ const AnimatedSection: React.FC<{ children: React.ReactNode; className?: string 
     return (
         <div
             ref={ref}
-            className={`${className || ''} transition-all duration-1000 ${isElVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+            style={{ transitionDelay: `${delay}ms` }}
+            className={`${className || ''} transition-all duration-1000 transform ${isElVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
         >
             {children}
         </div>
     );
 };
 
-// --------------- NEW ICONS ---------------
+// --------------- ICONS (Minimalist / Technical) ---------------
 
-const SpeedIcon = (props: React.SVGProps<SVGSVGElement>) => (
+const ChipIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12.5l-3-6-3 6h6z" />
-  </svg>
-);
-
-const IntelligenceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.25 21.75l-.648-1.178a3.375 3.375 0 00-2.456-2.456L12 17.25l1.178-.648a3.375 3.375 0 002.456-2.456L16.25 13.5l.648 1.178a3.375 3.375 0 002.456 2.456L20.25 18l-1.178.648a3.375 3.375 0 00-2.456 2.456z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5M19.5 8.25h-1.5m-15 3.75H1.5m18 0h-1.5m-15 3.75H1.5m18 0h-1.5" />
+    <rect x="6" y="6" width="12" height="12" rx="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-const CompletenessIcon = (props: React.SVGProps<SVGSVGElement>) => (
+const CubeTransparentIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
   </svg>
 );
 
-const CampaignArchitectureIcon = (props: React.SVGProps<SVGSVGElement>) => (
+const NetworkIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
   </svg>
 );
-const PromptIntelligenceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25a2.25 2.25 0 00-2.25 2.25v10.5a2.25 2.25 0 002.25 2.25h9.75z" />
-     <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 8.25l-4.5 4.5 4.5 4.5" />
-  </svg>
-);
-const AudienceIntelligenceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-4.663M12 10.5a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z" transform="translate(-4, -4) scale(0.8)" />
+
+const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
     </svg>
 );
-const VersatilityIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25a8.25 8.25 0 00-8.25 8.25c0 1.833.467 3.56 1.257 5.034M12 2.25a8.25 8.25 0 018.25 8.25c0 1.833-.467 3.56-1.257 5.034M12 21.75a8.25 8.25 0 005.27-15.023M12 21.75a8.25 8.25 0 01-5.27-15.023" />
-  </svg>
-);
-const EnterpriseReadyIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 11.25h6M9 15.75h6" />
-  </svg>
+
+const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+    </svg>
 );
 
-// --------------- LANDING PAGE COMPONENTS ---------------
+const MapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+    </svg>
+);
+
+const ChartBarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
+    </svg>
+);
+
+// --------------- VISUAL ASSETS (Quantum Shapes) ---------------
+
+const QuantumGrid: React.FC = () => (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {/* Moving Floor Grid */}
+        <div className="absolute inset-0 perspective-grid opacity-[0.08] origin-top"></div>
+        
+        {/* Floating Cubes (Qubits) */}
+        <div className="absolute top-[15%] left-[10%] w-16 h-16 bg-gradient-to-br from-blue-100 to-white rounded-xl shadow-2xl rotate-12 animate-float-slow opacity-80 border border-white/50 backdrop-blur-sm"></div>
+        <div className="absolute top-[40%] right-[8%] w-24 h-24 bg-gradient-to-bl from-indigo-100 to-white rounded-2xl shadow-2xl -rotate-6 animate-float-medium opacity-70 border border-white/50"></div>
+        <div className="absolute bottom-[20%] left-[15%] w-12 h-12 bg-gradient-to-tr from-cyan-50 to-white rounded-lg shadow-lg rotate-45 animate-float-fast opacity-60"></div>
+        
+        {/* Soft Interference Gradients */}
+        <div className="absolute -top-[10%] -right-[10%] w-[800px] h-[800px] bg-blue-200/20 rounded-full blur-[120px] mix-blend-multiply animate-pulse-slow"></div>
+        <div className="absolute -bottom-[10%] -left-[10%] w-[600px] h-[600px] bg-indigo-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
+    </div>
+);
+
+// --------------- COMPONENTS ---------------
 
 const LandingHeader: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial }) => (
-    <header className="absolute top-0 left-0 right-0 z-30 py-4">
+    <header className="fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 bg-white/70 backdrop-blur-lg border-b border-slate-200/60 shadow-sm">
         <div className="container mx-auto px-6 flex justify-between items-center">
-            <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.82m5.84-2.56a6 6 0 01-2.56 5.84m-2.56-5.84a6 6 0 01-5.84-2.56m11.2 0a6 6 0 01-5.84 2.56M12 21a9 9 0 110-18 9 9 0 010 18z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 10.5h6m-3.75-3.75v7.5" />
-                </svg>
-                <h1 className="text-xl font-bold text-white tracking-tight">AI Campaign Generator</h1>
+            <div className="flex items-center gap-2.5 cursor-pointer">
+                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <CubeTransparentIcon className="h-5 w-5" />
+                </div>
+                <span className="text-lg font-bold text-slate-900 tracking-tight">
+                    Campaign<span className="font-light text-slate-500">Gen</span>
+                </span>
             </div>
-            <div className="flex items-center space-x-4">
-                <button onClick={onStartTrial} className="text-gray-300 hover:text-white text-sm font-medium transition-colors">Login</button>
-                <button onClick={onStartTrial} className="bg-white text-gray-900 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-200 transition-colors">Start Free Trial</button>
+            <div className="flex items-center space-x-6">
+                <button onClick={onStartTrial} className="hidden md:block text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Sign In</button>
+                <button 
+                    onClick={onStartTrial} 
+                    className="relative group px-6 py-2.5 rounded-full overflow-hidden bg-slate-900 text-white shadow-xl shadow-slate-900/20 hover:shadow-slate-900/30 transition-all hover:-translate-y-0.5"
+                >
+                    <span className="relative text-sm font-semibold tracking-wide flex items-center gap-2">
+                        Start Trial <ArrowRightIcon className="w-3.5 h-3.5" />
+                    </span>
+                </button>
             </div>
         </div>
     </header>
 );
 
 const HeroSection: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial }) => (
-    <section className="relative bg-gray-900 text-white pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-gray-900 to-gray-900 z-0"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-[150%] rounded-full bg-indigo-500/10 blur-3xl z-0"></div>
-        <div className="container mx-auto px-6 relative z-10 text-center">
-            <AnimatedSection>
-                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                    Generate Complete Marketing Campaigns with AI
-                </h1>
-            </AnimatedSection>
-            <AnimatedSection>
-                <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-300">
-                    From high-level strategy and audience segmentation to multi-channel content and execution, build your next campaign in minutes, not weeks.
-                </p>
-            </AnimatedSection>
-            <AnimatedSection>
-                <button onClick={onStartTrial} className="mt-10 px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-transform hover:scale-105 shadow-lg shadow-indigo-600/30">
-                    Try Free - Create Your First Campaign
-                </button>
-            </AnimatedSection>
-        </div>
-        <AnimatedSection>
-            <div className="relative mt-16">
-                 <img src="https://assets.aceternity.com/demos/tailwind/dashboard.png" alt="Platform Interface" className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl shadow-indigo-900/50 border border-gray-700" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
-            </div>
-        </AnimatedSection>
-    </section>
-);
+    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-slate-50">
+        <QuantumGrid />
 
-const StatsSection: React.FC = () => {
-    const StatItem: React.FC<{ value: number, label: string, suffix?: string }> = ({ value, label, suffix }) => {
-        const [count, setCount] = useState(0);
-        const ref = useRef<HTMLDivElement>(null);
-        const { observe, isVisible } = useScrollAnimation();
-
-        useEffect(() => {
-            observe(ref.current);
-        }, [observe]);
-
-        useEffect(() => {
-            if (isVisible(ref.current)) {
-                let start = 0;
-                const end = value;
-                if (start === end) return;
-                const duration = 2000;
-                const incrementTime = (duration / end);
-                const timer = setInterval(() => {
-                    start += Math.ceil(end / (duration / 10)); // speed up for large numbers
-                    if (start >= end) {
-                        setCount(end);
-                        clearInterval(timer);
-                    } else {
-                        setCount(start);
-                    }
-                }, 10);
-                return () => clearInterval(timer);
-            }
-        }, [isVisible(ref.current), value]);
-
-        return (
-            <div ref={ref} className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-indigo-400">{count.toLocaleString()}{suffix}</p>
-                <p className="text-sm text-gray-400 mt-2">{label}</p>
-            </div>
-        );
-    };
-
-    return (
-        <section className="py-20 bg-gray-900">
-            <div className="container mx-auto px-6">
-                <AnimatedSection className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                    <StatItem value={800} label="Satisfied Users Trust Our Platform" suffix="+" />
-                    <StatItem value={100} label="Companies Building Better Campaigns" suffix="+" />
-                    <StatItem value={25000} label="Campaigns Created" suffix="+" />
-                </AnimatedSection>
-                <AnimatedSection className="mt-16">
-                    <p className="text-center text-gray-500 text-sm">TRUSTED BY TEAMS AT</p>
-                    <div className="flex justify-center items-center flex-wrap gap-x-12 gap-y-4 mt-6 grayscale opacity-60">
-                         {['Momentum Digital', 'PixelCraft', 'Launchpad MKTG', 'Tidal Wave Creative', 'Sprout Socials'].map(name => (
-                            <span key={name} className="text-xl font-semibold text-gray-500">{name}</span>
-                        ))}
+        <div className="container mx-auto px-6 relative z-10">
+            <div className="max-w-5xl mx-auto text-center">
+                
+                <AnimatedSection className="flex justify-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-indigo-100 shadow-sm">
+                        <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                        <span className="text-xs font-bold text-slate-600 tracking-widest uppercase font-mono">System Operational v2.5</span>
                     </div>
                 </AnimatedSection>
-            </div>
-        </section>
-    );
-};
 
-
-const ValuePropsSection: React.FC = () => {
-  const benefits = [
-    { icon: SpeedIcon, title: "Unmatched Speed", description: "Build comprehensive campaigns in minutes, not weeks. Go from idea to execution faster than ever before." },
-    { icon: IntelligenceIcon, title: "Strategic Intelligence", description: "Our AI understands marketing strategy and audience dynamics, ensuring every campaign is built on a solid foundation." },
-    { icon: CompletenessIcon, title: "End-to-End Solution", description: "From strategy and budgeting to channel selection and content creation, everything you need is in one place." }
-  ];
-  return (
-    <section className="py-24 bg-gray-900">
-      <div className="container mx-auto px-6">
-        <AnimatedSection className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white">Why Use Our Platform?</h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-400">Our platform is more than just a tool—it's your AI-powered marketing co-pilot.</p>
-        </AnimatedSection>
-        <AnimatedSection className="grid md:grid-cols-3 gap-10 mt-16">
-          {benefits.map(benefit => (
-            <div key={benefit.title} className="bg-gray-800/50 p-8 rounded-lg border border-gray-700 text-center">
-              <div className="inline-block p-4 bg-indigo-600/20 text-indigo-400 rounded-full">
-                <benefit.icon className="w-8 h-8" />
-              </div>
-              <h3 className="mt-6 text-xl font-semibold text-white">{benefit.title}</h3>
-              <p className="mt-2 text-gray-400">{benefit.description}</p>
-            </div>
-          ))}
-        </AnimatedSection>
-      </div>
-    </section>
-  );
-};
-
-const TopFeaturesSection: React.FC = () => {
-    const features = [
-        { icon: CampaignArchitectureIcon, title: "Comprehensive Campaign Architecture", description: "Automatically structures complete campaigns including strategy, budgeting, touchpoints, content themes, and channels, ensuring nothing is overlooked.", imgSrc: "https://picsum.photos/seed/arch/600/400" },
-        { icon: PromptIntelligenceIcon, title: "Intelligent Prompt Interpretation", description: "Smartly handles both positive and negative instructions, correctly interpreting 'what not to do' guidance and adapting outputs accordingly.", imgSrc: "https://picsum.photos/seed/prompt/600/400" },
-        { icon: AudienceIntelligenceIcon, title: "Advanced Audience Intelligence", description: "Automatically identifies and segments probable target groups, suggesting optimal channels and messaging for each audience.", imgSrc: "https://picsum.photos/seed/audience/600/400" },
-        { icon: VersatilityIcon, title: "Cross-Platform Versatility", description: "Works equally well across different product categories and campaign types, with platform-aware content generation for social, search, display, and more.", imgSrc: "https://picsum.photos/seed/versatile/600/400" },
-        { icon: EnterpriseReadyIcon, title: "Enterprise-Ready Solution", description: "A real-world marketing application, not just a concept generator. Scalable from solo marketers to enterprise teams, with capabilities that grow with your needs.", imgSrc: "https://picsum.photos/seed/enterprise/600/400" }
-    ];
-
-    return (
-        <section className="py-24 bg-gray-800/40">
-            <div className="container mx-auto px-6">
-                <AnimatedSection className="text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white">Powerful Features, Effortless Results</h2>
+                <AnimatedSection delay={100}>
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-slate-900 leading-[1.1] mb-8">
+                        Deterministic Marketing in a <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600">
+                            Probabilistic World
+                        </span>
+                    </h1>
                 </AnimatedSection>
-                <div className="mt-16 space-y-12">
-                    {features.map((feature, index) => (
-                        <AnimatedSection key={feature.title}>
-                            <div className={`flex flex-col md:flex-row items-center gap-12 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
-                                <div className="md:w-1/2">
-                                    <div className="inline-flex items-center gap-4">
-                                        <div className="p-3 bg-gray-700 rounded-lg"><feature.icon className="w-6 h-6 text-indigo-400" /></div>
-                                        <h3 className="text-2xl font-bold text-white">{feature.title}</h3>
-                                    </div>
-                                    <p className="mt-4 text-lg text-gray-400">{feature.description}</p>
+
+                <AnimatedSection delay={200}>
+                    <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-slate-500 leading-relaxed font-light tracking-wide">
+                        Harness the power of predictive AI to architect multi-channel campaigns. Calculate outcomes before you spend a dollar.
+                    </p>
+                </AnimatedSection>
+
+                <AnimatedSection delay={300} className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <button 
+                        onClick={onStartTrial} 
+                        className="px-12 py-5 bg-slate-900 text-white text-xl font-bold rounded-full hover:bg-slate-800 transition-all hover:scale-105 shadow-2xl shadow-slate-900/20 w-full sm:w-auto flex items-center justify-center gap-3"
+                    >
+                        <span>View Demo</span>
+                        <ArrowRightIcon className="w-6 h-6" />
+                    </button>
+                </AnimatedSection>
+
+                {/* Floating Dashboard Preview */}
+                <AnimatedSection delay={500} className="mt-24 relative max-w-5xl mx-auto perspective-1000">
+                    <div className="relative rounded-2xl bg-white border border-slate-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden transform rotate-x-6 hover:rotate-x-0 transition-transform duration-1000 ease-out p-2">
+                        <div className="rounded-xl overflow-hidden border border-slate-100 bg-slate-50 relative">
+                             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent mix-blend-multiply pointer-events-none"></div>
+                             <img 
+                                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop" 
+                                alt="Dashboard Interface" 
+                                className="w-full h-auto opacity-90 hover:scale-105 transition-transform duration-[2s]" 
+                             />
+                        </div>
+                        
+                        {/* Floating Data Cards */}
+                        <div className="absolute top-1/4 -right-6 bg-white/90 backdrop-blur-md p-4 rounded-xl border border-indigo-100 shadow-xl animate-float-slow hidden md:block">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <NetworkIcon className="w-5 h-5" />
                                 </div>
-                                <div className="md:w-1/2 p-8 bg-gray-900 rounded-lg border border-gray-700">
-                                   <div className="h-48 bg-gray-800 rounded-md overflow-hidden">
-                                        <img src={feature.imgSrc} alt={`${feature.title} Visual`} className="w-full h-full object-cover" />
-                                   </div>
+                                <div>
+                                    <p className="text-[10px] text-slate-400 font-mono uppercase font-bold">Conversion Probability</p>
+                                    <p className="text-lg font-bold text-slate-900">94.2%</p>
                                 </div>
                             </div>
-                        </AnimatedSection>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-};
-
-const HowItWorksSection: React.FC = () => (
-    <section className="py-24 bg-gray-900">
-        <div className="container mx-auto px-6">
-            <AnimatedSection className="text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-white">Get Started in 3 Simple Steps</h2>
-            </AnimatedSection>
-            <AnimatedSection className="relative mt-16">
-                <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-0.5 bg-gray-700 hidden md:block" />
-                <div className="relative grid md:grid-cols-3 gap-12">
-                    {[
-                        { num: 1, title: "Describe", description: "Provide your campaign goals, target audience, and any specific constraints or negative instructions." },
-                        { num: 2, title: "Generate", description: "Our AI builds a comprehensive strategy, journey, and content assets in seconds." },
-                        { num: 3, title: "Launch", description: "Review, refine, and connect your accounts to launch your campaign directly from the platform." }
-                    ].map(step => (
-                        <div key={step.num} className="bg-gray-800/50 p-8 rounded-lg border border-gray-700 text-center z-10">
-                            <div className="w-12 h-12 flex items-center justify-center mx-auto bg-indigo-600 text-white font-bold text-xl rounded-full mb-6">{step.num}</div>
-                            <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-                            <p className="mt-2 text-gray-400">{step.description}</p>
                         </div>
-                    ))}
-                </div>
-            </AnimatedSection>
-        </div>
-    </section>
-);
 
-const TestimonialsSection: React.FC = () => (
-     <section className="py-24 bg-gray-800/40">
-        <div className="container mx-auto px-6">
-            <AnimatedSection className="text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-white">What Our Users Are Saying</h2>
-            </AnimatedSection>
-            <AnimatedSection className="grid md:grid-cols-3 gap-8 mt-16">
-                 {[
-                    { name: "Sarah L.", role: "Marketing Director", quote: "This platform has become our single source of truth for campaign planning. The speed and strategic depth are simply unmatched." },
-                    { name: "Mike R.", role: "PPC Specialist", quote: "I was skeptical about AI for strategy, but the audience intelligence is spot-on. It's saved us thousands in testing." },
-                    { name: "Jessica Chen", role: "Founder, Bloom & Co.", quote: "As a small team, this tool is a game-changer. We can now execute campaigns that feel like they came from a massive agency." }
-                ].map(testimonial => (
-                    <div key={testimonial.name} className="bg-gray-900 p-8 rounded-lg border border-gray-700">
-                        <p className="text-gray-300">"{testimonial.quote}"</p>
-                        <div className="flex items-center mt-6">
-                             <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-white">{testimonial.name.charAt(0)}</div>
-                             <div className="ml-4">
-                                <p className="font-semibold text-white">{testimonial.name}</p>
-                                <p className="text-sm text-gray-400">{testimonial.role}</p>
-                             </div>
+                         <div className="absolute bottom-12 -left-6 bg-white/90 backdrop-blur-md p-4 rounded-xl border border-cyan-100 shadow-xl animate-float-medium hidden md:block">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-600">
+                                    <ChipIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-slate-400 font-mono uppercase font-bold">Asset Generation</p>
+                                    <p className="text-lg font-bold text-slate-900">Complete</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                 ))}
-            </AnimatedSection>
-        </div>
-     </section>
-);
-
-const CTASection: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial }) => (
-    <section className="py-24 bg-gray-900">
-        <div className="container mx-auto px-6">
-            <AnimatedSection>
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-12 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white">Ready to Transform Your Marketing?</h2>
-                    <p className="mt-4 text-lg text-indigo-200">Generate your first campaign for free. No credit card required.</p>
-                    <button onClick={onStartTrial} className="mt-8 px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-200 transition-transform hover:scale-105 shadow-lg">
-                        Start Free Trial
-                    </button>
-                    <p className="mt-4 text-xs text-indigo-200/80">Free 7-day trial • No credit card needed • Cancel anytime</p>
-                </div>
-            </AnimatedSection>
+                </AnimatedSection>
+            </div>
         </div>
     </section>
+);
+
+const FeatureCard: React.FC<{ title: string; description: string; icon: React.ReactNode; delay: number }> = ({ title, description, icon, delay }) => (
+    <AnimatedSection delay={delay} className="group relative p-8 bg-white rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500 hover:-translate-y-1 h-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-white opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+        <div className="relative z-10 flex flex-col h-full">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-900 mb-6 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                {icon}
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
+            <p className="text-slate-500 leading-relaxed">{description}</p>
+        </div>
+    </AnimatedSection>
+);
+
+const FeaturesGrid: React.FC = () => (
+    <section className="py-32 bg-white relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-slate-50 to-transparent opacity-50"></div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+            <div className="max-w-3xl mx-auto text-center mb-20">
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">Computational Creativity</h2>
+                <p className="text-slate-500 text-lg">The platform separates logic from execution. First, we simulate the perfect strategy. Then, we generate the assets to match.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <FeatureCard 
+                    delay={0}
+                    title="AI-Prescribed Strategy"
+                    description="Automated strategic planning that analyzes your goal and audience to prescribe the optimal approach before execution begins."
+                    icon={<NetworkIcon className="w-6 h-6" />}
+                />
+                <FeatureCard 
+                    delay={150}
+                    title="Journey Orchestration"
+                    description="Build complete, multi-step campaign journeys with automated triggers, decision points, and wait times."
+                    icon={<MapIcon className="w-6 h-6" />}
+                />
+                <FeatureCard 
+                    delay={300}
+                    title="Governance & Compliance"
+                    description="Automated checks ensure brand safety, regulatory compliance (GDPR/CCPA), and frequency capping."
+                    icon={<ShieldCheckIcon className="w-6 h-6" />}
+                />
+                <FeatureCard 
+                    delay={450}
+                    title="Channel Strategy"
+                    description="Generate data-driven channel selection strategies, prioritizing platforms based on audience reach and cost efficiency."
+                    icon={<ChipIcon className="w-6 h-6" />}
+                />
+                <FeatureCard 
+                    delay={600}
+                    title="Dynamic Media Plan"
+                    description="Generate comprehensive media plans with adjustable parameters. Modify budgets and constraints on the fly."
+                    icon={<ChartBarIcon className="w-6 h-6" />}
+                />
+                <FeatureCard 
+                    delay={750}
+                    title="Creative Asset Generation"
+                    description="Instantly generate production-ready copy, images, and video scripts tailored to each specific channel."
+                    icon={<CubeTransparentIcon className="w-6 h-6" />}
+                />
+            </div>
+        </div>
+    </section>
+);
+
+const StatsTicker: React.FC = () => (
+    <div className="bg-slate-900 py-24 relative overflow-hidden">
+        {/* Abstract Light Beams */}
+        <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-1/2 -left-1/4 w-full h-full bg-gradient-to-br from-indigo-500/20 to-transparent transform rotate-12 blur-3xl"></div>
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-white/10">
+                <div className="p-4">
+                    <p className="text-4xl md:text-6xl font-black text-white tracking-tight mb-2">10<span className="text-indigo-400 text-3xl align-top">+</span></p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Models Ensembled</p>
+                </div>
+                <div className="p-4">
+                    <p className="text-4xl md:text-6xl font-black text-white tracking-tight mb-2">0.4<span className="text-indigo-400 text-3xl align-top">s</span></p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Inference Latency</p>
+                </div>
+                <div className="p-4">
+                    <p className="text-4xl md:text-6xl font-black text-white tracking-tight mb-2">99<span className="text-indigo-400 text-3xl align-top">%</span></p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Brand Safety</p>
+                </div>
+                <div className="p-4">
+                    <p className="text-4xl md:text-6xl font-black text-white tracking-tight mb-2">∞<span className="text-indigo-400 text-3xl align-top"></span></p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Scalability</p>
+                </div>
+            </div>
+        </div>
+    </div>
 );
 
 const LandingFooter: React.FC = () => (
-    <footer className="bg-gray-900 border-t border-gray-800">
-        <div className="container mx-auto px-6 py-8 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} AI Campaign Generator. All rights reserved.</p>
+    <footer className="bg-white border-t border-slate-200 pt-16 pb-12">
+        <div className="container mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-slate-900 rounded flex items-center justify-center text-white">
+                        <CubeTransparentIcon className="h-3 w-3" />
+                    </div>
+                    <span className="font-bold text-slate-900 tracking-tight">CampaignGen</span>
+                </div>
+                
+                <div className="flex gap-8 text-sm font-medium text-slate-500">
+                    <a href="#" className="hover:text-indigo-600 transition-colors">Documentation</a>
+                    <a href="#" className="hover:text-indigo-600 transition-colors">API Reference</a>
+                    <a href="#" className="hover:text-indigo-600 transition-colors">System Status</a>
+                </div>
+            </div>
+            <div className="mt-12 pt-8 border-t border-slate-100 text-center text-xs text-slate-400 font-mono">
+                &copy; {new Date().getFullYear()} CampaignGen Inc. All computational resources optimized.
+            </div>
         </div>
     </footer>
 );
 
-
-// --------------- MAIN LANDING PAGE COMPONENT ---------------
+// --------------- MAIN LAYOUT ---------------
 
 interface LandingPageProps {
     onStartTrial: () => void;
@@ -371,20 +360,56 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onStartTrial }) => {
     return (
-        <div className="bg-gray-900">
+        <div className="bg-slate-50 text-slate-900 min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
             <style>{`
-                html { scroll-behavior: smooth; }
+                /* Custom Animations */
+                .perspective-grid {
+                    background-size: 60px 60px;
+                    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                                      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+                    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+                    transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+                    animation: grid-move 20s linear infinite;
+                }
+
+                @keyframes grid-move {
+                    0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+                    100% { transform: perspective(500px) rotateX(60deg) translateY(60px) translateZ(-200px); }
+                }
+
+                @keyframes float-slow {
+                    0%, 100% { transform: translateY(0px) rotate(12deg); }
+                    50% { transform: translateY(-20px) rotate(15deg); }
+                }
+                @keyframes float-medium {
+                    0%, 100% { transform: translateY(0px) rotate(-6deg); }
+                    50% { transform: translateY(-15px) rotate(-3deg); }
+                }
+                @keyframes float-fast {
+                    0%, 100% { transform: translateY(0px) rotate(45deg); }
+                    50% { transform: translateY(-10px) rotate(50deg); }
+                }
+                
+                .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+                .animate-float-medium { animation: float-medium 6s ease-in-out infinite; }
+                .animate-float-fast { animation: float-fast 4s ease-in-out infinite; }
+                .perspective-1000 { perspective: 1000px; }
+                
+                @keyframes pulse-slow {
+                    0%, 100% { opacity: 0.4; transform: scale(1); }
+                    50% { opacity: 0.7; transform: scale(1.1); }
+                }
+                .animate-pulse-slow { animation: pulse-slow 10s infinite ease-in-out; }
             `}</style>
+            
             <LandingHeader onStartTrial={onStartTrial} />
+            
             <main>
                 <HeroSection onStartTrial={onStartTrial} />
-                <StatsSection />
-                <ValuePropsSection />
-                <TopFeaturesSection />
-                <HowItWorksSection />
-                <TestimonialsSection />
-                <CTASection onStartTrial={onStartTrial} />
+                <StatsTicker />
+                <FeaturesGrid />
             </main>
+            
             <LandingFooter />
         </div>
     );

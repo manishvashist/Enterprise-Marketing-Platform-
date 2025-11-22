@@ -8,7 +8,7 @@ import { databaseService } from '../services/databaseService';
 import { subscriptionService } from '../services/subscriptionService';
 import { Campaign, User, AssetGenerationProgress, VideoAssetState, UsageInfo } from '../types';
 import { ConnectionsView } from './ConnectionsView';
-import { LoadCampaignModal } from './LoadCampaignModal';
+import { SavedCampaigns } from './SavedCampaigns';
 import { BillingView } from './billing/BillingView';
 import { UsageMessage } from './UsageMessage';
 import { authService } from '../services/authService';
@@ -21,21 +21,20 @@ interface MainAppProps {
     user: User;
     onLogout: () => void;
     onUserUpdate: (user: User) => void;
-    // FIX: Add onSetGlobalSuccess to props to align with usage in App.tsx
     onSetGlobalSuccess: (message: string | null) => void;
 }
 
 const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setView }) => (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/50 rounded-lg p-8 border-2 border-dashed border-gray-700">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl p-8 border-2 border-dashed border-slate-300">
         <div className="text-center">
-             <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="mt-4 text-xl font-semibold text-white">Subscription Required</h3>
-            <p className="mt-2 text-gray-400">Your trial has ended. Please subscribe to continue using the platform.</p>
+            <h3 className="mt-4 text-xl font-semibold text-slate-800">Subscription Required</h3>
+            <p className="mt-2 text-slate-500">Your trial has ended. Please subscribe to continue using the platform.</p>
             <button
                 onClick={() => setView('billing')}
-                className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-all"
+                className="mt-6 px-6 py-2.5 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20"
             >
                 View Plans
             </button>
@@ -55,7 +54,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
   const [isApiKeySelected, setIsApiKeySelected] = useState(false);
   const [recordingField, setRecordingField] = useState<'goal' | 'audience' | null>(null);
   const [savedCampaigns, setSavedCampaigns] = useState<Campaign[]>([]);
-  const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
   
   const [isFetchingCampaigns, setIsFetchingCampaigns] = useState(false);
@@ -101,7 +99,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
   }, [user]);
 
   useEffect(() => {
-    if (user && user.role !== 'User') {
+    if (user) {
         const fetchCampaigns = async () => {
             setIsFetchingCampaigns(true);
             setError(null);
@@ -138,22 +136,23 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     setVideoAssets({});
     setAssetGenerationProgress({ totalChannels: 0, completedChannels: 0, isGeneratingAll: false, channelProgress: {} });
 
-    const fullPrompt = `Campaign Goal: ${goalPrompt}\nTarget Audience: ${audiencePrompt}`;
-
     try {
+      const fullPrompt = `Campaign Goal: ${goalPrompt}\nTarget Audience: ${audiencePrompt}`;
+      // This call includes the usage check before generation
       const generatedCampaignData = await generateCampaignJourney(fullPrompt, user);
       
-      const newCampaign = await subscriptionService.createCampaignUsage(user.id, generatedCampaignData);
+      const usage = await subscriptionService.getUsageInfo(user.id);
 
-      setCampaign(newCampaign);
-      // FIX: Replaced direct database call 'findUserById' with 'authService.getCurrentUser()' to correctly fetch the updated user profile after campaign generation, resolving a method not found error.
-      const updatedUser = await authService.getCurrentUser();
-      if (updatedUser) {
-        onUserUpdate(updatedUser);
-      }
+      const unsavedCampaign: Campaign = {
+          ...generatedCampaignData,
+          userId: user.id,
+          isTrialCampaign: usage.reason === 'trial',
+          channelAssets: {},
+      };
+      
+      setCampaign(unsavedCampaign);
 
-      // Initialize progress state for recommended channels
-      const recommended = newCampaign.channelSelection?.channelCategories.flatMap(cat => cat.channels.filter(ch => ch.isRecommended)) || [];
+      const recommended = unsavedCampaign.channelSelection?.channelCategories.flatMap(cat => cat.channels.filter(ch => ch.isRecommended)) || [];
       setAssetGenerationProgress(prev => ({
         ...prev,
         totalChannels: recommended.length,
@@ -168,51 +167,92 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     } finally {
       setIsLoading(false);
     }
-  }, [goalPrompt, audiencePrompt, user, onUserUpdate]);
+  }, [goalPrompt, audiencePrompt, user]);
 
   const handleSaveCampaign = useCallback(async () => {
-    if (!campaign || !user || user.role === 'User' || campaign.isTrialCampaign) return;
+    if (!campaign || !user) return;
     setIsSaving(true);
     setError(null);
     try {
-        const saved = await databaseService.saveCampaign(user.id, campaign);
-        setCampaign(saved);
+        let savedCampaign: Campaign;
+        if (campaign.id) {
+            // Update existing campaign
+            savedCampaign = await databaseService.saveCampaign(user.id, campaign);
+            onSetGlobalSuccess("Campaign updated successfully!");
+        } else {
+            // Create new campaign
+            const { userId, isTrialCampaign, ...campaignData } = campaign;
+            
+            // This service call handles usage tracking AND database creation
+            savedCampaign = await subscriptionService.createCampaignUsage(user.id, campaignData as Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>);
+            onSetGlobalSuccess("Campaign saved successfully!");
+
+            // After saving, we must update the user state to reflect new usage stats
+            const updatedUser = await authService.getCurrentUser();
+            if (updatedUser) {
+              onUserUpdate(updatedUser);
+            }
+        }
+        
+        // Update the current campaign state with the full object from DB (including ID)
+        setCampaign(savedCampaign);
+        
+        // Refresh the list of saved campaigns to show the new/updated one
         const campaigns = await databaseService.getCampaignsForUser(user.id);
         setSavedCampaigns(campaigns);
+
     } catch(err) {
         console.error("Failed to save campaign", err);
         setError("Failed to save the campaign. Please try again.");
     } finally {
         setIsSaving(false);
     }
-  }, [campaign, user]);
+  }, [campaign, user, onSetGlobalSuccess, onUserUpdate]);
 
   const handleLoadCampaign = useCallback((campaignToLoad: Campaign) => {
     setCampaign(campaignToLoad);
-    setIsLoadModalOpen(false);
     setAssetGenerationProgress({ totalChannels: 0, completedChannels: 0, isGeneratingAll: false, channelProgress: {} });
     setVideoAssets({});
     setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleDeleteCampaign = useCallback(async (campaignId: string) => {
-    if (!user || user.role === 'User') return;
-    setDeletingCampaignId(campaignId);
+  const handleEditAsNewCampaign = useCallback((campaignToEdit: Campaign) => {
+    // Populate inputs from the selected campaign
+    setGoalPrompt(campaignToEdit.description || '');
+    setAudiencePrompt(campaignToEdit.audienceQuery || '');
+    // Clear the canvas to indicate a new generation is required
+    setCampaign(null);
     setError(null);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    onSetGlobalSuccess("Campaign loaded as a new template. Modify the prompts and generate a new version.");
+  }, [onSetGlobalSuccess]);
+
+  const handleDeleteCampaign = useCallback(async (campaignId: string) => {
+    if (!user || !campaignId) return;
+    
+    const originalCampaigns = [...savedCampaigns];
+    setDeletingCampaignId(campaignId);
+    // Optimistic UI update
+    setSavedCampaigns(prevCampaigns => prevCampaigns.filter(c => c.id !== campaignId));
+    setError(null);
+
     try {
-        await databaseService.deleteCampaign(campaignId);
+        await databaseService.softDeleteCampaign(campaignId);
         if (campaign?.id === campaignId) {
             setCampaign(null);
         }
-        const campaigns = await databaseService.getCampaignsForUser(user.id);
-        setSavedCampaigns(campaigns);
+        onSetGlobalSuccess("Campaign moved to trash successfully.");
     } catch(err) {
         console.error("Failed to delete campaign", err);
         setError("Failed to delete the campaign. Please try again.");
+        // Revert optimistic update on failure
+        setSavedCampaigns(originalCampaigns);
     } finally {
         setDeletingCampaignId(null);
     }
-  }, [user, campaign]);
+  }, [user, campaign, onSetGlobalSuccess, savedCampaigns]);
   
   const handleGenerateForChannel = useCallback(async (channelName: string, channelCategory: string) => {
     if (!campaign) return;
@@ -436,14 +476,13 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                             isLoading={isLoading}
                             recordingField={recordingField}
                             onToggleRecording={handleToggleRecording}
-                            onToggleLoadModal={() => setIsLoadModalOpen(prev => !prev)}
                             usageInfo={usageInfo}
                         />
                     </div>
                     {error && (
-                        <div className="w-full max-w-4xl mx-auto mt-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-red-300 flex justify-between items-center animate-fade-in">
-                            <span>{error}</span>
-                            <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-800/50">
+                        <div className="w-full max-w-4xl mx-auto mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex justify-between items-center animate-fade-in shadow-sm">
+                            <span className="font-medium">{error}</span>
+                            <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-100 text-red-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -470,23 +509,22 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                             onSetGlobalSuccess={onSetGlobalSuccess}
                         />
                     </div>
-                    <LoadCampaignModal
+                     <SavedCampaigns
                         user={user}
-                        isOpen={isLoadModalOpen}
-                        onClose={() => setIsLoadModalOpen(false)}
                         campaigns={savedCampaigns}
                         onLoad={handleLoadCampaign}
+                        onEdit={handleEditAsNewCampaign}
                         onDelete={handleDeleteCampaign}
                         isFetching={isFetchingCampaigns}
                         deletingId={deletingCampaignId}
+                        onSetGlobalSuccess={onSetGlobalSuccess}
                     />
                 </>
             );
         case 'billing':
-            // FIX: Pass onSetGlobalSuccess to BillingView to satisfy its prop requirements.
             return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} onSetGlobalSuccess={onSetGlobalSuccess} />;
         case 'admin':
-            return user.role === 'Admin' ? <div><h1 className="text-white text-2xl">Admin Dashboard</h1><p className="text-gray-400">User management and system settings will be here.</p></div> : null;
+            return user.role === 'Admin' ? <div><h1 className="text-slate-900 text-2xl font-bold">Admin Dashboard</h1><p className="text-slate-500 mt-2">User management and system settings will be here.</p></div> : null;
         default:
             return null;
     }
@@ -494,7 +532,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
 
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-600 flex flex-col">
       <Header currentView={view} setView={handleSetView} user={user} onLogout={onLogout} />
       <UsageMessage usageInfo={usageInfo} setView={handleSetView} />
       <main className="flex-grow container mx-auto px-4 md:p-8 flex flex-col">

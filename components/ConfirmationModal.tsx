@@ -58,15 +58,6 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, on
           </button>
         </div>
       </div>
-      <style>{`
-        @keyframes fadeInTop {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-            animation: fadeInTop 0.3s ease-out forwards;
-        }
-    `}</style>
     </div>
   );
 };

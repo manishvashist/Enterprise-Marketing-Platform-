@@ -1,13 +1,29 @@
 
-
-
 // @google/genai Coding Guidelines: Do not import `LiveSession` as an explicit return type.
-import { GoogleGenAI, Type, Modality, LiveServerMessage, Blob } from '@google/genai';
+import { GoogleGenAI, Type, Modality, LiveServerMessage, Blob, GenerateContentResponse } from '@google/genai';
 import { Campaign, NodeType, ChannelAssetGenerationResult, User, MediaPlanInputs } from '../types';
 import { subscriptionService } from './subscriptionService';
 
 // Per coding guidelines, API key is assumed to be available in process.env.API_KEY.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// --- Utility: Retry Logic for API Calls ---
+async function callWithRetry<T>(
+    apiCall: () => Promise<T>, 
+    retries = 3, 
+    backoff = 1000
+): Promise<T> {
+    try {
+        return await apiCall();
+    } catch (error: any) {
+        if (retries > 0 && (error.status === 429 || error.code === 429 || (error.message && error.message.includes('quota')))) {
+            console.warn(`API Quota exceeded. Retrying in ${backoff}ms... (${retries} retries left)`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            return callWithRetry(apiCall, retries - 1, backoff * 2);
+        }
+        throw error;
+    }
+}
 
 const campaignSchema = {
   type: Type.OBJECT,
@@ -343,7 +359,7 @@ const channelAssetGenerationSchema = {
 
 
 export const generateCampaignJourney = async (prompt: string, user: User): Promise<Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>> => {
-  const systemInstruction = `You are a world-class AI Campaign Generator, acting as an expert strategist and media planner. Your task is to transform a user's campaign request into a single, detailed, structured JSON object.
+  const systemInstruction = `You are a world-class AI Campaign Generator, acting as an expert strategist and media planner. Your task is to provide the data for a marketing campaign based on a user's request. The output format is a structured JSON object handled by the system; focus on generating high-quality, comprehensive, and strategically sound content for each field.
 
 The user provides a 'Campaign Goal' and a 'Target Audience'.
 
@@ -371,7 +387,7 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
 *   Define the audience with 'audienceQuery', 'estimatedSize', and 'keyAttributes'.
 
 **5. Generative Journey Orchestration:**
-*   Design a multi-step journey starting with a TRIGGER (ID 1).
+*   Design a multi-step journey starting with a TRIGGER (ID 1). The journey MUST contain at least 5 nodes.
 *   For **WAIT** nodes, specify the 'duration'.
 *   **Predictive AI in Decisions**: For at least one **DECISION** node, base the 'condition' on a predictive model (e.g., "Churn Score > 80%"). You MUST specify the model's name in 'details.predictionModel'.
 
@@ -388,8 +404,7 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
     *   In 'details.optimization', provide 'rationale' for channel choice, 'sendTime', and 'frequency' advice.
 
 **Structure Rules:**
-*   Ensure all node connections are logical and 'nodeId's are valid.
-*   Return a single, valid JSON object matching the schema. Do not wrap it in markdown.`;
+*   Ensure all node connections are logical and 'nodeId's are valid.`;
 
   try {
     const canGenerateCheck = await subscriptionService.canGenerateCampaign(user.id);
@@ -399,19 +414,18 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
         throw new Error("You do not have permission to generate a new campaign.");
     }
     
-    const response = await ai.models.generateContent({
+    const response = await callWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
       model: 'gemini-2.5-pro',
       contents: prompt,
       config: {
         systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: campaignSchema,
         temperature: 0.5,
+        responseMimeType: "application/json",
+        responseSchema: campaignSchema,
       },
-    });
+    }));
 
-    // FIX: Use response.text instead of response.text()
-    const jsonString = response.text.trim();
+    const jsonString = response.text ? response.text.trim() : '';
     
     if (!jsonString) {
       throw new Error('API returned an empty response.');
@@ -447,13 +461,16 @@ The user provides a 'Campaign Goal' and a 'Target Audience'.
     if(error instanceof Error && (error.message.includes('quota') || error.message.includes('trial'))) {
       throw error;
     }
+    if (error instanceof Error && error.message.includes('429')) {
+        throw new Error("The system is experiencing high traffic (Quota Exceeded). Please wait a moment and try again.");
+    }
     throw new Error("Failed to generate campaign. The AI model may be experiencing issues. Please try again later.");
   }
 };
 
 export const generateAssetsForChannel = async (campaign: Campaign, channelName: string, channelCategory: string): Promise<ChannelAssetGenerationResult> => {
     const systemInstruction = `You are an expert creative director AI. Your task is to generate comprehensive marketing assets for a specific channel based on a campaign strategy.
-Your entire response MUST be a single, valid JSON object that conforms to the provided schema. Do not include any markdown formatting or surrounding text.
+Your response will be a structured JSON object, handled by the system. Focus on the quality of the content.
 
 Key instructions:
 - The main 'content' object for an asset represents the primary version.
@@ -477,19 +494,18 @@ Generate a set of production-ready marketing assets. For each asset, create at l
 `;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await callWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-pro',
             contents: prompt,
             config: {
                 systemInstruction,
-                responseMimeType: 'application/json',
-                responseSchema: channelAssetGenerationSchema,
                 temperature: 0.2,
+                responseMimeType: "application/json",
+                responseSchema: channelAssetGenerationSchema,
             },
-        });
+        }));
 
-        // FIX: Use response.text instead of response.text()
-        const jsonString = response.text.trim();
+        const jsonString = response.text ? response.text.trim() : '';
         if (!jsonString) {
             throw new Error(`Asset generation API returned an empty response for ${channelName}.`);
         }
@@ -501,6 +517,9 @@ Generate a set of production-ready marketing assets. For each asset, create at l
         if (error instanceof Error && error.message.includes('json')) {
             throw new Error(`Failed to generate assets for ${channelName}. The AI model returned an invalid structure.`);
         }
+        if (error instanceof Error && error.message.includes('429')) {
+            throw new Error("Quota exceeded for asset generation. Please try again shortly.");
+        }
         throw new Error(`Failed to generate assets for ${channelName}. The AI model may be experiencing issues. Please try again later.`);
     }
 };
@@ -510,7 +529,7 @@ export const editImageWithPrompt = async (imagePart: { inlineData: { data: strin
         const textPart = {
             text: prompt,
         };
-        const response = await ai.models.generateContent({
+        const response = await callWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: {
                 parts: [imagePart, textPart],
@@ -518,17 +537,22 @@ export const editImageWithPrompt = async (imagePart: { inlineData: { data: strin
             config: {
                 responseModalities: [Modality.IMAGE],
             },
-        });
+        }));
         
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-                return part.inlineData.data;
+        if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData) {
+                    return part.inlineData.data;
+                }
             }
         }
         throw new Error("No image data found in the response from the AI model.");
 
     } catch (error) {
         console.error("Error calling Gemini API for image editing:", error);
+        if (error instanceof Error && error.message.includes('429')) {
+            throw new Error("Quota exceeded for image editing. Please try again shortly.");
+        }
         throw new Error("Failed to edit image. The AI model may be experiencing issues. Please try again later.");
     }
 };
@@ -554,7 +578,7 @@ export const generateVideoForChannel = async (
 
     try {
         updateProgress("Sending request to the video model...");
-        let operation = await videoAI.models.generateVideos({
+        let operation = await callWithRetry<any>(() => videoAI.models.generateVideos({
             model: 'veo-3.1-fast-generate-preview',
             prompt,
             config: {
@@ -562,13 +586,13 @@ export const generateVideoForChannel = async (
                 resolution: '720p',
                 aspectRatio,
             }
-        });
+        }));
 
         updateProgress("Video generation started. This can take several minutes...");
         while (!operation.done) {
             await new Promise(resolve => setTimeout(resolve, 10000)); // Poll every 10 seconds
             updateProgress("Checking video status...");
-            operation = await videoAI.operations.getVideosOperation({ operation });
+            operation = await callWithRetry<any>(() => videoAI.operations.getVideosOperation({ operation }));
         }
 
         const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
@@ -760,17 +784,20 @@ Generated: [Date]
 `;
     
     try {
-        const response = await ai.models.generateContent({
+        const response = await callWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-pro',
             contents: prompt,
             config: {
                 systemInstruction,
                 temperature: 0.3,
             },
-        });
-        return response.text;
+        }));
+        return response.text || '';
     } catch (error) {
         console.error("Error calling Gemini API for media plan:", error);
+        if (error instanceof Error && error.message.includes('429')) {
+            throw new Error("Quota exceeded for media plan generation. Please try again shortly.");
+        }
         throw new Error("Failed to generate media plan. The AI model may be experiencing issues.");
     }
 };
@@ -822,17 +849,20 @@ Follow the specified "UPDATED MEDIA PLAN" output format precisely, including a c
 `;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await callWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-pro',
             contents: prompt,
             config: {
                 systemInstruction,
                 temperature: 0.3,
             },
-        });
-        return response.text;
+        }));
+        return response.text || '';
     } catch (error) {
         console.error("Error calling Gemini API for media plan regeneration:", error);
+        if (error instanceof Error && error.message.includes('429')) {
+            throw new Error("Quota exceeded for media plan regeneration. Please try again shortly.");
+        }
         throw new Error("Failed to regenerate media plan. The AI model may be experiencing issues.");
     }
 };

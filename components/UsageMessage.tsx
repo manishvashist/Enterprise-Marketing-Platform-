@@ -44,20 +44,20 @@ export const UsageMessage: React.FC<UsageMessageProps> = ({ usageInfo, setView }
   const content = getMessageAndButton();
   if (!content) return null;
 
-  const bgColor = canGenerate ? 'bg-gray-800' : 'bg-yellow-900/30';
-  const textColor = canGenerate ? 'text-gray-300' : 'text-yellow-200';
-  const borderColor = canGenerate ? 'border-gray-700' : 'border-yellow-700';
+  const bgColor = canGenerate ? 'bg-white' : 'bg-yellow-50';
+  const textColor = canGenerate ? 'text-slate-600' : 'text-yellow-800';
+  const borderColor = canGenerate ? 'border-slate-200' : 'border-yellow-200';
 
   return (
     <div className="container mx-auto px-4 md:px-8 -mt-4 mb-4">
-        <div className={`p-3 rounded-lg border ${borderColor} ${bgColor} flex items-center justify-center text-center gap-x-4`}>
-            <p className={`text-sm ${textColor}`}>
+        <div className={`p-3 rounded-lg border ${borderColor} ${bgColor} flex items-center justify-center text-center gap-x-4 shadow-sm transition-colors`}>
+            <p className={`text-sm ${textColor} font-medium`}>
                 {content.message}
             </p>
             {content.buttonText && (
                 <button
                     onClick={() => setView('billing', 'subscription')}
-                    className="flex-shrink-0 px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-500 transition-colors"
+                    className="flex-shrink-0 px-3 py-1 bg-orange-600 text-white text-xs font-semibold rounded-md hover:bg-orange-700 transition-colors"
                 >
                     {content.buttonText}
                 </button>

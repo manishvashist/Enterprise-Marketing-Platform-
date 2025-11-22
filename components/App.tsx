@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { authService } from './services/authService';
 import { subscriptionService } from './services/subscriptionService';
@@ -11,27 +8,27 @@ import { LandingPage } from './components/landing/LandingPage';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 
 const SupabaseConfigurationNotice: React.FC = () => (
-  <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-center">
+  <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-center">
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-red-400">Backend Configuration Required</h1>
-      <p className="mt-2 text-gray-300">
+      <h1 className="text-2xl font-bold text-red-600">Backend Configuration Required</h1>
+      <p className="mt-2 text-slate-600">
         The application cannot connect to the backend because the Supabase environment variables are not set.
       </p>
-      <div className="mt-4 text-left bg-gray-800 p-4 rounded-lg border border-gray-700">
-          <p className="text-gray-400">
-             Please provide your Supabase credentials. In a typical setup, you would create a <code className="bg-gray-700 text-yellow-300 px-2 py-1 rounded">.env</code> file with the following:
+      <div className="mt-4 text-left bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <p className="text-slate-500">
+             Please provide your Supabase credentials. In a typical setup, you would create a <code className="bg-slate-100 text-orange-700 px-2 py-1 rounded border border-slate-200">.env</code> file with the following:
           </p>
-          <pre className="mt-2 text-gray-300 bg-gray-900 p-3 rounded-md">
+          <pre className="mt-2 text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-200 overflow-x-auto">
             <code>
               NEXT_PUBLIC_SUPABASE_URL="YOUR_SUPABASE_URL"<br />
               NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY="YOUR_SUPABASE_KEY"
             </code>
           </pre>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-slate-500">
             Replace the placeholder values with your actual Supabase project credentials.
           </p>
       </div>
-       <p className="mt-4 text-sm text-gray-500">
+       <p className="mt-4 text-sm text-slate-400">
             You can find these in your Supabase project dashboard under Project Settings &gt; API. After setting them, please restart your development server.
         </p>
     </div>
@@ -222,39 +219,39 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.campaigns TO authenticated;
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-center">
-            <div className="max-w-3xl bg-gray-800 p-8 rounded-lg border border-red-700 shadow-2xl">
-                <h1 className="text-2xl font-bold text-red-400">Database Setup Incomplete</h1>
-                <p className="mt-2 text-gray-300">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-center">
+            <div className="max-w-3xl bg-white p-8 rounded-lg border border-red-200 shadow-xl">
+                <h1 className="text-2xl font-bold text-red-600">Database Setup Incomplete</h1>
+                <p className="mt-2 text-slate-600">
                     The application cannot start because one or more required database tables are missing or the setup is incomplete.
                 </p>
-                <p className="mt-1 text-sm text-red-400 font-mono bg-red-900/30 p-2 rounded">{error}</p>
+                <p className="mt-1 text-sm text-red-600 font-mono bg-red-50 p-2 rounded border border-red-100">{error}</p>
                 
                 <div className="mt-6 text-left">
-                    <h2 className="font-semibold text-white">Action Required:</h2>
-                    <p className="text-gray-400 mt-2">
+                    <h2 className="font-semibold text-slate-800">Action Required:</h2>
+                    <p className="text-slate-600 mt-2">
                         Please run the following SQL script in your Supabase project's SQL Editor to create and verify the necessary tables and functions.
                     </p>
-                    <p className="text-gray-400 mt-1 text-sm">
-                        Navigate to <span className="font-mono bg-gray-700 text-yellow-300 px-1 py-0.5 rounded">SQL Editor</span> in your Supabase dashboard and execute the entire script below. This script is now safe to run multiple times.
+                    <p className="text-slate-500 mt-1 text-sm">
+                        Navigate to <span className="font-mono bg-slate-100 text-orange-700 px-1 py-0.5 rounded border border-slate-200">SQL Editor</span> in your Supabase dashboard and execute the entire script below. This script is now safe to run multiple times.
                     </p>
 
                     <div className="relative mt-4">
-                        <pre className="bg-gray-900 text-gray-300 p-4 rounded-md text-xs overflow-x-auto h-64">
+                        <pre className="bg-slate-800 text-slate-200 p-4 rounded-md text-xs overflow-x-auto h-64">
                             <code>
                                 {setupSql}
                             </code>
                         </pre>
                         <button
                             onClick={copyToClipboard}
-                            className="absolute top-2 right-2 bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500"
+                            className="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-orange-500"
                         >
                             {copied ? 'Copied!' : 'Copy SQL'}
                         </button>
                     </div>
 
-                    <p className="mt-4 text-gray-400 text-center">
-                        After running the script, please <button onClick={() => window.location.reload()} className="font-semibold text-indigo-400 hover:underline">refresh this page</button>.
+                    <p className="mt-4 text-slate-500 text-center">
+                        After running the script, please <button onClick={() => window.location.reload()} className="font-semibold text-orange-600 hover:underline">refresh this page</button>.
                     </p>
                 </div>
             </div>
@@ -391,8 +388,8 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (isLoadingSession) {
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-          <svg className="animate-spin h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <svg className="animate-spin h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -420,9 +417,9 @@ const App: React.FC = () => {
   return (
     <>
       {globalError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-red-800/90 backdrop-blur-sm border border-red-600 text-white p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
-            <span>{globalError}</span>
-            <button onClick={() => setGlobalError(null)} className="p-1 rounded-full hover:bg-red-700/50 transition-colors">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-white border border-red-200 text-red-700 p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
+            <span className="font-medium">{globalError}</span>
+            <button onClick={() => setGlobalError(null)} className="p-1 rounded-full hover:bg-red-50 transition-colors text-red-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -430,9 +427,9 @@ const App: React.FC = () => {
         </div>
       )}
       {globalSuccess && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-green-800/90 backdrop-blur-sm border border-green-600 text-white p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
-            <span>{globalSuccess}</span>
-            <button onClick={() => setGlobalSuccess(null)} className="p-1 rounded-full hover:bg-green-700/50 transition-colors">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xl bg-white border border-green-200 text-green-700 p-4 rounded-lg shadow-lg text-center z-50 flex justify-between items-center animate-fade-in-up">
+            <span className="font-medium">{globalSuccess}</span>
+            <button onClick={() => setGlobalSuccess(null)} className="p-1 rounded-full hover:bg-green-50 transition-colors text-green-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>

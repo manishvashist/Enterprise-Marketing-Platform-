@@ -180,12 +180,13 @@ export interface ChannelAssetGenerationResult {
 
 
 export interface Campaign {
-  id: string; // Now mandatory after creation
+  id?: string; // Optional to allow for unsaved campaigns in-memory
   userId: string;
   subscriptionId?: string | null;
   isTrialCampaign: boolean;
-  createdAt: string;
-  updatedAt: string;
+  isDeleted?: boolean;
+  createdAt?: string; // Optional
+  updatedAt?: string; // Optional
   name: string;
   description: string;
   audienceQuery: string;
@@ -296,6 +297,7 @@ export interface SubscriptionPlan {
   monthlyPrice: number;
   billingCycleMonths: number;
   campaignQuota: number;
+
   quotaPeriodDays: number;
   annualPrice: number;
   annualDiscountPercent: number;

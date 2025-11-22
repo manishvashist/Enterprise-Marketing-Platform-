@@ -41,9 +41,9 @@ const BranchConnector: React.FC<{ label: string }> = ({ label }) => {
     if (!label) return null;
     return (
         <div className="absolute left-[-1rem] top-1/2 -translate-y-1/2 w-max">
-            <div className="relative px-2 py-0.5 bg-slate-600 rounded-md">
-                <span className="text-xs font-semibold text-gray-200">{label}</span>
-                <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-600 transform rotate-45"></div>
+            <div className="relative px-2 py-0.5 bg-white rounded-md border border-slate-300 shadow-sm">
+                <span className="text-xs font-semibold text-slate-600">{label}</span>
+                <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-white border-l border-b border-slate-300 transform rotate-45"></div>
             </div>
         </div>
     );
@@ -64,7 +64,7 @@ const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: S
         <div key={parentNode.id} className={`relative ${animationClass}`} style={animationStyle}>
             <JourneyNode node={parentNode} />
             {parentNode.children.length > 0 && (
-                 <div className="pl-8 relative before:absolute before:left-4 before:top-0 before:h-full before:border-l-2 before:border-dashed before:border-slate-700">
+                 <div className="pl-8 relative before:absolute before:left-4 before:top-0 before:h-full before:border-l-2 before:border-dashed before:border-slate-300">
                     {parentNode.children.map((branch: Branch, index: number) => (
                         <div key={`${parentNode.id}-${branch.nodeId}-${index}`} className="relative pt-4">
                             <BranchConnector label={branch.label} />
@@ -78,39 +78,39 @@ const renderTree = (nodes: JourneyNodeType[], nodeId: number = 1, renderedIds: S
 };
 
 const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strategy }) => (
-    <div className="bg-slate-800/50 rounded-lg p-6 mb-6 border border-white/10">
+    <div className="bg-white rounded-xl p-6 mb-6 border border-slate-200 shadow-sm">
         <div className="flex items-start space-x-4">
-            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                <SparklesIcon className="w-6 h-6 text-indigo-400" />
+            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <SparklesIcon className="w-6 h-6 text-orange-600" />
             </div>
             <div className="flex-grow">
-                <h3 className="font-semibold text-lg text-white">AI-Prescribed Strategy</h3>
-                <p className="text-sm text-gray-300 mt-2">{strategy.recommendations}</p>
+                <h3 className="font-semibold text-lg text-slate-900">AI-Prescribed Strategy</h3>
+                <p className="text-sm text-slate-600 mt-2">{strategy.recommendations}</p>
                 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h4 className="font-medium text-sm text-gray-200 mb-2">Budget Allocation</h4>
+                        <h4 className="font-medium text-sm text-slate-800 mb-2">Budget Allocation</h4>
                         <ul className="space-y-2 text-sm">
                             {strategy.budgetAllocation.map((item, index) => (
-                                <li key={index} className="flex justify-between items-center p-3 bg-slate-900/50 rounded-md">
-                                    <span className="text-gray-300">{item.channel}: <em className="text-gray-400 text-xs not-italic">{item.rationale}</em></span>
-                                    <span className="font-bold text-indigo-300 text-lg">{item.percentage}%</span>
+                                <li key={index} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-md">
+                                    <span className="text-slate-600">{item.channel}: <em className="text-slate-400 text-xs not-italic">{item.rationale}</em></span>
+                                    <span className="font-bold text-orange-600 text-lg">{item.percentage}%</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
                     <div>
-                        <h4 className="font-medium text-sm text-gray-200 mb-2">Timing & Duration</h4>
-                        <div className="p-3 bg-slate-900/50 rounded-md text-sm space-y-2">
+                        <h4 className="font-medium text-sm text-slate-800 mb-2">Timing & Duration</h4>
+                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-sm space-y-2">
                            <div>
-                             <p className="text-xs text-gray-400">Launch</p>
-                             <p className="font-semibold text-gray-100">{strategy.timing.launchDate}</p>
+                             <p className="text-xs text-slate-500">Launch</p>
+                             <p className="font-semibold text-slate-800">{strategy.timing.launchDate}</p>
                            </div>
                            <div>
-                              <p className="text-xs text-gray-400">Duration</p>
-                              <p className="font-semibold text-gray-100">{strategy.timing.duration}</p>
+                              <p className="text-xs text-slate-500">Duration</p>
+                              <p className="font-semibold text-slate-800">{strategy.timing.duration}</p>
                            </div>
-                            <p className="text-gray-400 text-xs pt-2 border-t border-white/10"><em>{strategy.timing.rationale}</em></p>
+                            <p className="text-slate-500 text-xs pt-2 border-t border-slate-200"><em>{strategy.timing.rationale}</em></p>
                         </div>
                     </div>
                 </div>
@@ -121,22 +121,22 @@ const PrescriptiveStrategy: React.FC<{ strategy: CampaignStrategy }> = ({ strate
 
 
 const AudienceSegment: React.FC<{ campaign: Campaign }> = ({ campaign }) => (
-    <div className="bg-slate-800/50 rounded-lg p-6 mb-6 border border-white/10">
+    <div className="bg-white rounded-xl p-6 mb-6 border border-slate-200 shadow-sm">
         <div className="flex items-start space-x-4">
-            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                <UserGroupIcon className="w-6 h-6 text-teal-400" />
+            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <UserGroupIcon className="w-6 h-6 text-emerald-600" />
             </div>
             <div className="flex-grow">
-                <h3 className="font-semibold text-lg text-white">Target Audience Segment</h3>
-                <p className="text-sm text-gray-400 italic mt-1">"{campaign.audienceQuery}"</p>
+                <h3 className="font-semibold text-lg text-slate-900">Target Audience Segment</h3>
+                <p className="text-sm text-slate-500 italic mt-1">"{campaign.audienceQuery}"</p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
                     <div className="flex items-center">
-                        <span className="text-3xl font-bold text-teal-300 mr-2">{campaign.estimatedSize.toLocaleString()}</span>
-                        <span className="text-sm text-gray-400">Estimated Profiles</span>
+                        <span className="text-3xl font-bold text-emerald-600 mr-2">{campaign.estimatedSize.toLocaleString()}</span>
+                        <span className="text-sm text-slate-500">Estimated Profiles</span>
                     </div>
                     <div className="flex flex-wrap gap-2 items-center">
                         {campaign.keyAttributes.map((attr, index) => (
-                            <span key={index} className="bg-slate-700 text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">{attr}</span>
+                            <span key={index} className="bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium px-2.5 py-1 rounded-full">{attr}</span>
                         ))}
                     </div>
                 </div>
@@ -182,14 +182,14 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800/50 rounded-lg p-8 border-2 border-dashed border-slate-700">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl p-8 border-2 border-dashed border-slate-300 min-h-[400px]">
         <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-indigo-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <h3 className="text-xl font-semibold text-white">Generating Your Campaign Journey...</h3>
-            <p className="text-gray-400 mt-2">The AI is building a smart segment and crafting a multi-step strategy. This may take a moment.</p>
+            <h3 className="text-xl font-semibold text-slate-800">Generating Your Campaign Journey...</h3>
+            <p className="text-slate-500 mt-2">The AI is building a smart segment and crafting a multi-step strategy. This may take a moment.</p>
         </div>
       </div>
     );
@@ -197,13 +197,13 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
   if (error && !campaign) { // Only show full-screen error if there's no campaign data to display
     return (
-      <div className="w-full h-full flex items-center justify-center bg-red-900/20 rounded-lg p-8 border border-red-500">
+      <div className="w-full h-full flex items-center justify-center bg-red-50 rounded-xl p-8 border border-red-200 min-h-[400px]">
         <div className="text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-400 mx-auto mb-4" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto mb-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
-          <h3 className="text-xl font-semibold text-red-300">Error Generating Campaign</h3>
-          <p className="text-red-400 mt-2">{error}</p>
+          <h3 className="text-xl font-semibold text-red-700">Error Generating Campaign</h3>
+          <p className="text-red-600 mt-2">{error}</p>
         </div>
       </div>
     );
@@ -211,11 +211,11 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
   if (!campaign) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-800/50 rounded-lg p-8 border-2 border-dashed border-slate-700">
+      <div className="w-full h-full flex items-center justify-center bg-white rounded-xl p-8 border-2 border-dashed border-slate-300 min-h-[400px]">
         <div className="text-center">
-          <DocumentDuplicateIcon className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-300">Your campaign will appear here</h3>
-          <p className="text-gray-500 mt-2">Enter a goal and audience above to get started.</p>
+          <DocumentDuplicateIcon className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-slate-700">Your campaign will appear here</h3>
+          <p className="text-slate-500 mt-2">Enter a goal and audience above to get started.</p>
         </div>
       </div>
     );
@@ -260,25 +260,20 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
   const hasGeneratedAssets = generatedAssetChannels.length > 0 || generatedVideoAssets.length > 0;
   
   const getSaveButtonStatus = () => {
-    if (user.role === 'User') {
-      return { disabled: true, title: "You do not have permission to save campaigns." };
-    }
-    if (campaign.isTrialCampaign) {
-      return { disabled: true, title: "Trial campaigns cannot be saved. Please subscribe to save your work." };
-    }
+    // The consumption of the trial credit happens on this first save.
     return { disabled: false, title: "Save campaign progress" };
   }
   const saveButtonStatus = getSaveButtonStatus();
 
   const getSaveStatusText = () => {
     if (isSaving) {
-        return <span className="text-yellow-400 animate-pulse">Saving...</span>;
+        return <span className="text-orange-500 animate-pulse font-medium">Saving...</span>;
     }
-    if (campaign.isTrialCampaign) {
-        return <span className="text-yellow-400 bg-yellow-900/50 px-2 py-1 rounded-md text-xs font-medium">Trial Campaign</span>;
+    if (campaign.isTrialCampaign && !campaign.id) {
+        return <span className="text-yellow-700 bg-yellow-100 px-2 py-1 rounded-md text-xs font-medium border border-yellow-200">Unsaved Trial</span>;
     }
     if (campaign.updatedAt) {
-        return `Last saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}`;
+        return `Saved: ${new Date(campaign.updatedAt).toLocaleTimeString()}`;
     }
     return 'Unsaved';
   };
@@ -296,14 +291,14 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
   const TabButton: React.FC<{id: CanvasTab, label: string}> = ({id, label}) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === id ? 'bg-slate-700 text-white' : 'text-gray-400 hover:bg-slate-700/50 hover:text-white'}`}
+      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === id ? 'bg-slate-100 text-slate-900 font-bold shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
     >
       {label}
     </button>
   );
 
   return (
-    <div className="bg-slate-800/50 rounded-xl p-6 md:p-8 border border-white/10 shadow-2xl shadow-slate-900/50">
+    <div className="bg-white rounded-xl p-6 md:p-8 border border-slate-200 shadow-lg">
       <style>{`
         @keyframes journey-element-fade-in {
           from { opacity: 0; transform: translateX(-20px); }
@@ -364,21 +359,21 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
         {`Are you sure you want to download the campaign journey as a ${downloadType?.toUpperCase()} file?`}
       </ConfirmationModal>
 
-      <div className="border-b border-white/10 pb-6 mb-6 no-print">
+      <div className="border-b border-slate-200 pb-6 mb-6 no-print">
         <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
-              <p className="text-gray-400 mt-1 max-w-2xl">{campaign.description}</p>
+              <h2 className="text-2xl font-bold text-slate-900">{campaign.name}</h2>
+              <p className="text-slate-500 mt-1 max-w-2xl">{campaign.description}</p>
             </div>
             <div className="flex flex-col items-end flex-shrink-0 ml-4">
                  <div className="flex items-center gap-2">
-                     <button onClick={handleDownloadJson} className="p-2 bg-slate-700 text-gray-300 rounded-md hover:bg-slate-600 hover:text-white transition-colors" aria-label="Download as JSON" title="Download as JSON"><DocumentArrowDownIcon className="w-5 h-5"/></button>
-                     <button onClick={handleDownloadPdf} className="p-2 bg-slate-700 text-gray-300 rounded-md hover:bg-slate-600 hover:text-white transition-colors" aria-label="Download as PDF" title="Download as PDF"><PencilSquareIcon className="w-5 h-5"/></button>
+                     <button onClick={handleDownloadJson} className="p-2 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" aria-label="Download as JSON" title="Download as JSON"><DocumentArrowDownIcon className="w-5 h-5"/></button>
+                     <button onClick={handleDownloadPdf} className="p-2 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" aria-label="Download as PDF" title="Download as PDF"><PencilSquareIcon className="w-5 h-5"/></button>
                     <button
                         onClick={onSaveCampaign}
                         disabled={saveButtonStatus.disabled || isSaving}
                         title={saveButtonStatus.title}
-                        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center min-w-[90px]"
+                        className="px-4 py-2 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center min-w-[90px] shadow-md hover:shadow-lg"
                     >
                         {isSaving ? (
                              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -388,13 +383,13 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
                         ) : (campaign.id ? 'Update' : 'Save')}
                     </button>
                  </div>
-                 <p className="text-xs text-gray-500 mt-2 h-4">{getSaveStatusText()}</p>
+                 <p className="text-xs text-slate-400 mt-2 h-4">{getSaveStatusText()}</p>
             </div>
         </div>
         <div className="mt-4">
             <div className="flex flex-wrap gap-2">
                 {campaign.kpis.map((kpi, index) => (
-                    <span key={index} className="bg-indigo-500/20 text-indigo-300 text-xs font-medium px-2.5 py-1 rounded-full">{kpi}</span>
+                    <span key={index} className="bg-orange-50 text-orange-700 border border-orange-100 text-xs font-medium px-2.5 py-1 rounded-full">{kpi}</span>
                 ))}
             </div>
         </div>
@@ -408,8 +403,8 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
         {/* Tabs for non-print view */}
         <div className="mb-6 no-print">
-            <div className="border-b border-white/10">
-                <nav className="-mb-px flex space-x-2 overflow-x-auto" aria-label="Tabs">
+            <div className="border-b border-slate-200">
+                <nav className="-mb-px flex space-x-2 overflow-x-auto pb-2" aria-label="Tabs">
                     {tabs.filter(tab => tab.visible).map(tab => <TabButton key={tab.id} id={tab.id} label={tab.label} />)}
                 </nav>
             </div>
@@ -426,8 +421,10 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
             )}
             {activeTab === 'journey' && (
                  <div>
-                    <h3 className="font-semibold text-lg text-white mb-4">Customer Journey Flow</h3>
-                    {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-gray-500">No valid starting node found in the journey.</p>}
+                    <h3 className="font-semibold text-lg text-slate-900 mb-4">Customer Journey Flow</h3>
+                    <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 overflow-x-auto">
+                        {firstNodeId ? renderTree(campaign.nodes, firstNodeId, new Set(), isAnimating, 0) : <p className="text-slate-500">No valid starting node found in the journey.</p>}
+                    </div>
                  </div>
             )}
              {activeTab === 'governance' && campaign.governancePlan && <GovernanceDashboard plan={campaign.governancePlan} />}
@@ -458,7 +455,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
                     {generatedAssetChannels.length > 0 && (
                         <div>
-                            <h3 className="font-semibold text-lg text-white mb-4">Generated Content</h3>
+                            <h3 className="font-semibold text-lg text-slate-900 mb-4">Generated Content</h3>
                             <div className="space-y-6">
                                 {generatedAssetChannels.map(channelName => (
                                     <ChannelAssetCard
@@ -472,7 +469,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
 
                     {generatedVideoAssets.length > 0 && (
                         <div>
-                            <h3 className="font-semibold text-lg text-white mb-4">Generated Video</h3>
+                            <h3 className="font-semibold text-lg text-slate-900 mb-4">Generated Video</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* FIX: Explicitly type `videoState` to resolve the 'unknown' type error when accessing `.url`. */}
                                 {generatedVideoAssets.map(([channelName, videoState]: [string, VideoAssetState]) => (

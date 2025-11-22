@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { authService } from '../../services/authService';
 import { SocialLogins } from './SocialLogins';
@@ -59,21 +58,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white text-center mb-2">Create an Account</h2>
-      <p className="text-gray-400 text-center mb-6">Join the platform to start building campaigns.</p>
+      <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Create an Account</h2>
+      <p className="text-slate-500 text-center mb-6">Join the platform to start building campaigns.</p>
       
       <SocialLogins onSocialLogin={onSocialLogin} context="Sign up" />
 
       <div className="my-6 flex items-center">
-          <div className="flex-grow border-t border-gray-600"></div>
-          <span className="flex-shrink mx-4 text-gray-400 text-sm">Or with email</span>
-          <div className="flex-grow border-t border-gray-600"></div>
+          <div className="flex-grow border-t border-slate-200"></div>
+          <span className="flex-shrink mx-4 text-slate-400 text-sm">Or with email</span>
+          <div className="flex-grow border-t border-slate-200"></div>
       </div>
       
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <label htmlFor="fullName-register" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="fullName-register" className="block text-sm font-medium text-slate-700 mb-1">
               Full Name
             </label>
             <input
@@ -83,11 +82,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               onChange={(e) => setFullName(e.target.value)}
               required
               minLength={2}
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 placeholder-gray-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
           </div>
           <div>
-            <label htmlFor="email-register" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="email-register" className="block text-sm font-medium text-slate-700 mb-1">
               Email Address
             </label>
             <input
@@ -96,11 +95,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 placeholder-gray-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
           </div>
           <div>
-            <label htmlFor="password-register" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="password-register" className="block text-sm font-medium text-slate-700 mb-1">
               Password
             </label>
             <input
@@ -109,19 +108,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-200 placeholder-gray-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
             {password.length > 0 && (
               <div className="flex items-center mt-2">
-                <div className="w-full bg-gray-700 rounded-full h-1.5 mr-2">
+                <div className="w-full bg-slate-200 rounded-full h-1.5 mr-2">
                   <div className={`h-1.5 rounded-full ${strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${strength * 20}%`}}></div>
                 </div>
-                <span className="text-xs text-gray-400">{['Weak', 'Weak', 'Medium', 'Medium', 'Strong', 'Very Strong'][strength]}</span>
+                <span className="text-xs text-slate-500">{['Weak', 'Weak', 'Medium', 'Medium', 'Strong', 'Very Strong'][strength]}</span>
               </div>
             )}
           </div>
           <div>
-            <label htmlFor="confirmPassword-register" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="confirmPassword-register" className="block text-sm font-medium text-slate-700 mb-1">
               Confirm Password
             </label>
             <input
@@ -130,7 +129,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className={`w-full p-3 bg-gray-900 border rounded-md focus:ring-2 focus:border-indigo-500 text-gray-200 placeholder-gray-500 ${confirmPassword.length > 0 ? (passwordMatch ? 'border-green-500' : 'border-red-500') : 'border-gray-600'}`}
+              className={`w-full p-3 bg-slate-50 border rounded-md focus:ring-2 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all ${confirmPassword.length > 0 ? (passwordMatch ? 'border-green-500' : 'border-red-500') : 'border-slate-200'}`}
             />
           </div>
           <div className="flex items-start">
@@ -141,17 +140,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
                       type="checkbox"
                       checked={agreedToTerms}
                       onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-500 rounded bg-gray-700"
+                      className="focus:ring-orange-500 h-4 w-4 text-orange-600 border-slate-300 rounded bg-white"
                   />
               </div>
               <div className="ml-3 text-sm">
-                  <label htmlFor="terms" className="font-medium text-gray-400">
+                  <label htmlFor="terms" className="font-medium text-slate-500">
                       I agree to the{' '}
-                      <a href="#" className="text-indigo-400 hover:text-indigo-300">
+                      <a href="#" className="text-orange-600 hover:text-orange-700">
                           Terms of Service
                       </a>{' '}
                       and{' '}
-                      <a href="#" className="text-indigo-400 hover:text-indigo-300">
+                      <a href="#" className="text-orange-600 hover:text-orange-700">
                           Privacy Policy
                       </a>
                       .
@@ -160,23 +159,23 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
           </div>
         </div>
         
-        {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
-        {success && <p className="text-green-400 text-sm text-center mt-4">{success}</p>}
+        {error && <p className="text-red-600 text-sm text-center mt-4 bg-red-50 p-2 rounded border border-red-100">{error}</p>}
+        {success && <p className="text-green-700 text-sm text-center mt-4 bg-green-50 p-2 rounded border border-green-100">{success}</p>}
 
         <div className="mt-6">
           <button
             type="submit"
             disabled={isLoading || !!success || !agreedToTerms}
-            className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            className="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-md hover:shadow-lg"
           >
             {isLoading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </div>
       </form>
 
-      <p className="text-center text-sm text-gray-400 mt-6">
+      <p className="text-center text-sm text-slate-500 mt-6">
         Already have an account?{' '}
-        <button onClick={onToggleView} className="font-medium text-indigo-400 hover:text-indigo-300">
+        <button onClick={onToggleView} className="font-medium text-orange-600 hover:text-orange-700">
           Sign in
         </button>
       </p>

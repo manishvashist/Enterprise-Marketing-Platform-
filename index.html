@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -8,13 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Added html2pdf.js for reliable PDF downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
       body {
         font-family: 'Inter', sans-serif;
       }
       .loader {
-        border-top-color: #6366F1;
+        border-top-color: #ea580c; /* Orange-600 */
         animation: spin 1s linear infinite;
       }
       @keyframes spin {
@@ -34,6 +36,14 @@
        .animate-fade-in {
           animation: fadeIn 0.5s ease-out forwards;
        }
+       @keyframes pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); } /* Orange ring */
+        70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+      }
+      .animate-pulse-ring {
+        animation: pulse-ring 1.5s infinite;
+      }
     </style>
   <script type="importmap">
 {
@@ -47,7 +57,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-900 text-gray-200 antialiased">
+  <body class="bg-slate-50 text-slate-600 antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

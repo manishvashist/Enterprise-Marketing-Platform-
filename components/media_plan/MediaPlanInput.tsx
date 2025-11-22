@@ -17,7 +17,8 @@ export const MediaPlanInput: React.FC<MediaPlanInputProps> = ({ inputs, setInput
         setInputs(prev => ({ ...prev, [name]: value }));
     };
 
-    const isGenerateDisabled = isLoading || Object.values(inputs).some(v => v.trim() === '');
+    // FIX: Add a type guard to ensure `v` is a string before calling .trim(). This resolves the TypeScript error where `v` was inferred as `unknown`.
+    const isGenerateDisabled = isLoading || Object.values(inputs).some(v => typeof v === 'string' && v.trim() === '');
 
     return (
         <div className="bg-slate-800/50 rounded-xl shadow-lg p-6 md:p-8 border border-white/10">

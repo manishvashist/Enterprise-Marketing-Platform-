@@ -1,4 +1,5 @@
 
+
 import { User, Campaign, SubscriptionPlan, PlanCode, UserSubscription } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -44,6 +45,7 @@ const mapDbCampaignToCampaign = (dbCampaign: any): Campaign => {
         userId: dbCampaign.user_id,
         subscriptionId: dbCampaign.subscription_id,
         isTrialCampaign: dbCampaign.is_trial_campaign,
+        isDeleted: dbCampaign.is_deleted,
         createdAt: dbCampaign.created_at,
         updatedAt: dbCampaign.updated_at,
         name: dbCampaign.name,
@@ -66,6 +68,7 @@ const mapCampaignToDbCampaign = (campaign: Partial<Campaign>): any => {
     if (campaign.userId !== undefined) dbCampaign.user_id = campaign.userId;
     if (campaign.subscriptionId !== undefined) dbCampaign.subscription_id = campaign.subscriptionId;
     if (campaign.isTrialCampaign !== undefined) dbCampaign.is_trial_campaign = campaign.isTrialCampaign;
+    if (campaign.isDeleted !== undefined) dbCampaign.is_deleted = campaign.isDeleted;
     if (campaign.createdAt !== undefined) dbCampaign.created_at = campaign.createdAt;
     if (campaign.updatedAt !== undefined) dbCampaign.updated_at = campaign.updatedAt;
     if (campaign.name !== undefined) dbCampaign.name = campaign.name;
@@ -262,15 +265,15 @@ export const databaseService = {
         return mapDbCampaignToCampaign(data);
     },
     
-    async deleteCampaign(campaignId: string): Promise<void> {
+    async softDeleteCampaign(campaignId: string): Promise<void> {
         if (!supabase) throw new Error("Supabase is not configured.");
         const { error } = await supabase
             .from('campaigns')
-            .delete()
+            .update({ is_deleted: true, updated_at: new Date().toISOString() })
             .eq('id', campaignId);
         
         if (error) {
-            console.error('Error deleting campaign:', error.message);
+            console.error('Error soft-deleting campaign:', error.message);
             throw new Error(error.message);
         }
     },

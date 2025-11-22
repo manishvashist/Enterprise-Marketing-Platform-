@@ -36,17 +36,3 @@ export const ChannelAssetCard: React.FC<ChannelAssetCardProps> = ({ result }) =>
         </div>
     );
 };
-
-// Add a simple fade-in animation to the global styles or in a style tag if needed
-const styles = `
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-}
-`;
-const styleSheet = document.createElement("style");
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
