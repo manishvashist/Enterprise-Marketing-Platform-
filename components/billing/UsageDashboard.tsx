@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { User, UsageInfo } from '../../types';
 
 interface UsageDashboardProps {
@@ -24,40 +24,40 @@ export const UsageDashboard: React.FC<UsageDashboardProps> = ({ user, usageInfo 
     const usagePercentage = usageInfo.limit > 0 ? ((usageInfo.limit - usageInfo.remaining) / usageInfo.limit) * 100 : 0;
     
     return (
-        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
+        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Current Plan */}
                 <div className="md:col-span-1">
-                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Current Plan</h2>
-                    <p className="text-3xl font-bold text-indigo-400 mt-2">{plan?.name}</p>
-                    <p className="text-gray-300 capitalize">{activeSubscription.billingType} Billing</p>
-                    <button className="mt-4 text-sm text-indigo-400 hover:text-indigo-300 font-semibold">
+                    <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Current Plan</h2>
+                    <p className="text-3xl font-bold text-indigo-600 mt-2">{plan?.name}</p>
+                    <p className="text-slate-600 capitalize">{activeSubscription.billingType} Billing</p>
+                    <button className="mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-semibold underline decoration-indigo-200 underline-offset-2">
                         Manage Subscription
                     </button>
                 </div>
                 
                 {/* Usage Details */}
-                <div className="md:col-span-2 bg-gray-900/50 p-6 rounded-lg">
+                <div className="md:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200">
                     <div className="flex justify-between items-center text-sm mb-2">
-                        <span className="font-medium text-gray-200">Campaign Usage</span>
-                        <span className="text-gray-400 font-semibold">
+                        <span className="font-medium text-slate-700">Campaign Usage</span>
+                        <span className="text-slate-600 font-semibold">
                             {usageInfo.limit - usageInfo.remaining} / {usageInfo.limit}
                         </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
                         <div
-                            className="bg-indigo-500 h-4 rounded-full transition-all duration-500"
+                            className="bg-indigo-600 h-4 rounded-full transition-all duration-500"
                             style={{ width: `${usagePercentage}%` }}
                         ></div>
                     </div>
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
-                            <p className="text-gray-400">Quota Resets On</p>
-                            <p className="font-semibold text-white">{formatDate(activeSubscription.quotaResetDate)}</p>
+                            <p className="text-slate-500">Quota Resets On</p>
+                            <p className="font-semibold text-slate-900">{formatDate(activeSubscription.quotaResetDate)}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400">Next Billing Date</p>
-                            <p className="font-semibold text-white">{formatDate(activeSubscription.nextBillingDate)}</p>
+                            <p className="text-slate-500">Next Billing Date</p>
+                            <p className="font-semibold text-slate-900">{formatDate(activeSubscription.nextBillingDate)}</p>
                         </div>
                     </div>
                 </div>

@@ -31,39 +31,39 @@ export const PricingTierCard: React.FC<PricingTierCardProps> = ({ plan, billingT
     };
 
     return (
-        <div className={`bg-gray-800 rounded-lg p-6 border flex flex-col hover:border-indigo-500/80 transition-all duration-300 shadow-lg relative ${isMostPopular ? 'border-indigo-500' : 'border-gray-700'}`}>
+        <div className={`bg-white rounded-xl p-6 border flex flex-col hover:shadow-xl transition-all duration-300 shadow-sm relative ${isMostPopular ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-lg' : 'border-slate-200'}`}>
             {isMostPopular && (
-                <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
-                    <span className="bg-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <span className="bg-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-sm">Most Popular</span>
                 </div>
             )}
-            <h3 className="text-xl font-bold text-indigo-400">{plan.name}</h3>
-            <p className="text-sm text-gray-400 mt-2 flex-grow">{plan.name === 'Individual' ? 'For individuals and small teams.' : plan.name === 'Small Team' ? 'For growing businesses.' : 'For large-scale enterprises.'}</p>
+            <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
+            <p className="text-sm text-slate-500 mt-2 flex-grow">{plan.name === 'Individual' ? 'For individuals and small teams.' : plan.name === 'Small Team' ? 'For growing businesses.' : 'For large-scale enterprises.'}</p>
             
             <div className="my-6">
-                <span className="text-4xl font-extrabold text-white">{formatPrice(displayPrice)}</span>
-                <span className="text-gray-400">/{pricePeriod.split(',')[0]}</span>
-                {isAnnual && <p className="text-xs text-gray-500">Billed as {formatPrice(plan.annualPrice)} per year</p>}
+                <span className="text-4xl font-extrabold text-slate-900">{formatPrice(displayPrice)}</span>
+                <span className="text-slate-500">/{pricePeriod.split(',')[0]}</span>
+                {isAnnual && <p className="text-xs text-slate-400 mt-1">Billed as {formatPrice(plan.annualPrice)} per year</p>}
             </div>
 
-            <ul className="space-y-3 text-sm text-gray-300">
+            <ul className="space-y-3 text-sm text-slate-600">
                 <li className="flex items-center">
-                    <CheckCircleIcon className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                     <span>{getFeatureText(plan)}</span>
                 </li>
                 <li className="flex items-center">
-                    <CheckCircleIcon className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                     <span>Full Feature Access</span>
                 </li>
                  <li className="flex items-center">
-                    <CheckCircleIcon className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                     <span>Standard Support</span>
                 </li>
             </ul>
 
             <button
                 onClick={onSubscribe}
-                className="w-full mt-8 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors"
+                className={`w-full mt-8 px-6 py-3 font-bold rounded-lg transition-colors shadow-sm ${isMostPopular ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`}
             >
                 Choose Plan
             </button>

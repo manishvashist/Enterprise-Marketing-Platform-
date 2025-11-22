@@ -51,54 +51,57 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
 
     return (
         <div 
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={onClose}
         >
           <div 
-            className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700 animate-fade-in-up"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-slate-200 animate-fade-in-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white">Complete Your Purchase</h2>
-              <p className="text-gray-400 mt-1 text-sm">You are subscribing to the <span className="font-semibold text-indigo-300">{plan.name}</span> plan.</p>
+            <div className="p-6 border-b border-slate-200">
+              <h2 className="text-xl font-bold text-slate-900">Complete Your Purchase</h2>
+              <p className="text-slate-500 mt-1 text-sm">You are subscribing to the <span className="font-bold text-indigo-600">{plan.name}</span> plan.</p>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6">
-                <div className="bg-gray-900/70 rounded-lg p-4 mb-6">
+                <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
                     <div className="flex justify-between items-center">
-                        <span className="text-gray-300">Amount Due Today</span>
-                        <span className="text-2xl font-bold text-white">{formatPrice(amountDue)}</span>
+                        <span className="text-slate-600 font-medium">Amount Due Today</span>
+                        <span className="text-2xl font-bold text-slate-900">{formatPrice(amountDue)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 text-right">Billed per {periodString}</p>
+                    <p className="text-xs text-slate-500 text-right mt-1">Billed per {periodString}</p>
                 </div>
                 
                 {/* Simulated Payment Form */}
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="card-number" className="block text-sm font-medium text-gray-300 mb-1">Card Number</label>
+                        <label htmlFor="card-number" className="block text-sm font-medium text-slate-700 mb-1">Card Number</label>
                         <div className="relative">
-                            <input type="text" id="card-number" placeholder="•••• •••• •••• 4242" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-gray-200" disabled />
-                            <CreditCardIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <input type="text" id="card-number" placeholder="•••• •••• •••• 4242" className="w-full p-2.5 bg-white border border-slate-300 rounded-md text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow" disabled />
+                            <CreditCardIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         </div>
                     </div>
                     <div className="flex gap-4">
                         <div className="flex-1">
-                            <label htmlFor="expiry" className="block text-sm font-medium text-gray-300 mb-1">Expiry Date</label>
-                            <input type="text" id="expiry" placeholder="MM / YY" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-gray-200" disabled />
+                            <label htmlFor="expiry" className="block text-sm font-medium text-slate-700 mb-1">Expiry Date</label>
+                            <input type="text" id="expiry" placeholder="MM / YY" className="w-full p-2.5 bg-white border border-slate-300 rounded-md text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow" disabled />
                         </div>
                         <div className="flex-1">
-                            <label htmlFor="cvc" className="block text-sm font-medium text-gray-300 mb-1">CVC</label>
-                            <input type="text" id="cvc" placeholder="•••" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-gray-200" disabled />
+                            <label htmlFor="cvc" className="block text-sm font-medium text-slate-700 mb-1">CVC</label>
+                            <input type="text" id="cvc" placeholder="•••" className="w-full p-2.5 bg-white border border-slate-300 rounded-md text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow" disabled />
                         </div>
                     </div>
                 </div>
                 
-                {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
+                {error && <p className="text-red-600 text-sm text-center mt-4 bg-red-50 p-2 rounded-md">{error}</p>}
                 
-                <p className="text-xs text-gray-500 mt-6">This is a simulated payment form. Click below to confirm your subscription.</p>
+                <p className="text-xs text-slate-400 mt-6 text-center">
+                    <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                    Secure encrypted payment
+                </p>
 
                 <div className="mt-4">
-                    <button type="submit" disabled={isLoading} className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center justify-center">
+                    <button type="submit" disabled={isLoading} className="w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-lg shadow-indigo-600/20">
                         {isLoading ? (
                             <>
                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -111,6 +114,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
                     </button>
                 </div>
             </form>
+            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center rounded-b-xl">
+                <button onClick={onClose} disabled={isLoading} className="text-sm text-slate-500 hover:text-slate-800 font-medium">
+                    Cancel Transaction
+                </button>
+            </div>
           </div>
         </div>
     );

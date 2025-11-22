@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { User, UsageInfo, SubscriptionPlan } from '../../types';
 import { subscriptionService } from '../../services/subscriptionService';
@@ -52,7 +51,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ user, onSubscriptionCh
         if (isLoading) {
             return (
                 <div className="w-full flex items-center justify-center py-20">
-                    <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-500 h-12 w-12 animate-spin" style={{borderTopColor: '#6366F1'}}></div>
+                    <div className="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-12 w-12 animate-spin" style={{borderTopColor: '#4F46E5'}}></div>
                 </div>
             );
         }
@@ -62,29 +61,25 @@ export const BillingView: React.FC<BillingViewProps> = ({ user, onSubscriptionCh
         return <PricingPage user={user} plans={plans} onSubscriptionChange={onSubscriptionChange} />;
     };
 
-    const navButtonStyle = "px-4 py-2.5 text-sm font-semibold transition-colors rounded-md";
-    const activeStyle = "bg-gray-800 text-white";
-    const inactiveStyle = "text-gray-400 hover:bg-gray-700/50 hover:text-white";
-
     return (
         <div className="w-full max-w-6xl mx-auto animate-fade-in">
              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white">Settings</h1>
-                <p className="text-gray-400 mt-2">
+                <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
+                <p className="text-slate-500 mt-2">
                     Manage your subscription, profile, and account settings.
                 </p>
             </div>
             
-            <div className="flex items-center space-x-2 border-b border-gray-700 mb-8">
+            <div className="flex items-center space-x-6 border-b border-slate-200 mb-8">
                 <button 
                     onClick={() => setActiveTab('subscription')} 
-                    className={`pb-3 border-b-2 ${activeTab === 'subscription' ? 'border-indigo-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} font-medium transition-colors`}
+                    className={`pb-3 border-b-2 font-medium transition-colors ${activeTab === 'subscription' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                 >
                     Subscription & Usage
                 </button>
                 <button 
                     onClick={() => setActiveTab('profile')} 
-                    className={`pb-3 border-b-2 ${activeTab === 'profile' ? 'border-indigo-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} font-medium transition-colors`}
+                    className={`pb-3 border-b-2 font-medium transition-colors ${activeTab === 'profile' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                 >
                     Profile Settings
                 </button>
