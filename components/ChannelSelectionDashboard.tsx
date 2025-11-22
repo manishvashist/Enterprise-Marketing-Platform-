@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChannelSelectionInterface } from '../types';
 import { ChannelsIcon } from './icons/ChannelsIcon';
@@ -65,10 +66,10 @@ export const ChannelSelectionDashboard: React.FC<ChannelSelectionDashboardProps>
                                 <h4 className="font-semibold text-base text-slate-900 mb-3">{category.categoryName}</h4>
                                 <div className="space-y-3">
                                     {category.channels.map(channel => (
-                                        <div key={channel.channelName} className={`p-3 rounded-lg transition-all ${channel.isRecommended ? 'bg-white border border-cyan-200 shadow-sm ring-1 ring-cyan-100' : 'bg-white border border-slate-200'}`}>
+                                        <div key={channel.channelName} className={`p-3 rounded-lg transition-all ${channel.isRecommended ? 'bg-green-50 border border-green-200 shadow-sm ring-1 ring-green-100' : 'bg-white border border-slate-200'}`}>
                                             <div className="flex justify-between items-start">
-                                                <p className={`font-bold text-sm ${channel.isRecommended ? 'text-cyan-700' : 'text-slate-700'}`}>{channel.channelName}</p>
-                                                {channel.isRecommended && <StarIcon className="w-4 h-4 text-cyan-500 flex-shrink-0" />}
+                                                <p className={`font-bold text-sm ${channel.isRecommended ? 'text-green-800' : 'text-slate-700'}`}>{channel.channelName}</p>
+                                                {channel.isRecommended && <StarIcon className="w-4 h-4 text-green-600 flex-shrink-0" />}
                                             </div>
                                             {channel.isRecommended && <p className="text-xs text-slate-500 mt-1 italic">"{channel.rationale}"</p>}
                                             <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 // FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
 import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
@@ -17,6 +16,7 @@ import { CampaignExecutionManager } from './CampaignExecutionManager';
 import { ConfirmationModal } from './ConfirmationModal';
 import { DocumentDuplicateIcon, DocumentArrowDownIcon, PencilSquareIcon, InformationCircleIcon } from './icons/HeroIcons';
 import { MediaPlanView } from './media_plan/MediaPlanView';
+import { TaskProgressBar } from './TaskProgressBar';
 
 interface JourneyCanvasProps {
   user: User; // User is now required
@@ -187,14 +187,12 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
   if (isLoading) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl p-8 border-2 border-dashed border-slate-300 min-h-[400px]">
-        <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <h3 className="text-xl font-semibold text-slate-800">Generating Your Campaign Journey...</h3>
-            <p className="text-slate-500 mt-2">The AI is building a smart segment and crafting a multi-step strategy. This may take a moment.</p>
-        </div>
+        <TaskProgressBar 
+            estimatedDuration={20} 
+            label="Generating Campaign Strategy..." 
+            subLabel="Building smart segments and crafting multi-step journey"
+            progressColor="bg-orange-600"
+        />
       </div>
     );
   }
@@ -250,7 +248,32 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     } else if (downloadType === 'pdf') {
-        window.print();
+        const element = document.getElementById('journey-print-area');
+        // @ts-ignore
+        if (element && window.html2pdf) {
+            // Add class to handle styling during PDF generation
+            element.classList.add('pdf-generating');
+            
+            const opt = {
+                margin: 10,
+                filename: `${campaign.name.replace(/\s+/g, '_').toLowerCase()}_campaign.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // @ts-ignore
+            window.html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.remove('pdf-generating');
+            }).catch((err: any) => {
+                console.error("PDF Generation Failed:", err);
+                element.classList.remove('pdf-generating');
+                // Fallback to print if generation fails
+                window.print();
+            });
+        } else {
+            window.print();
+        }
     }
     
     setIsConfirmModalOpen(false);
@@ -313,6 +336,14 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
           opacity: 0;
         }
         .print-only-header { display: none; }
+        
+        /* PDF Generation Styles */
+        .pdf-generating .no-print { display: none !important; }
+        .pdf-generating .print-only-header { display: block !important; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
+        .pdf-generating { padding: 20px !important; background: white !important; }
+        .pdf-generating .overflow-x-auto { overflow: visible !important; }
+        .pdf-generating * { animation: none !important; opacity: 1 !important; transform: none !important; }
+
         @media print {
           body, html {
             background-color: #fff !important;

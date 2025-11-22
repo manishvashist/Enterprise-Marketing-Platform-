@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
 import { editImageWithPrompt } from '../services/geminiService';
+import { TaskProgressBar } from './TaskProgressBar';
 
 const fileToGenerativePart = async (file: File) => {
   const base64EncodedDataPromise = new Promise<string>((resolve) => {
@@ -128,9 +130,13 @@ export const ImageEditor: React.FC = () => {
                 {/* Output Section */}
                 <div className="bg-gray-900 rounded-lg flex items-center justify-center p-4 min-h-[300px] lg:min-h-full border border-gray-700">
                     {isLoading && (
-                        <div className="text-center text-gray-400">
-                            <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-600 h-12 w-12 mb-4 mx-auto animate-spin" style={{borderTopColor: '#6366F1'}}></div>
-                            <p>Editing in progress...</p>
+                        <div className="w-full px-8">
+                            <TaskProgressBar 
+                                estimatedDuration={10} 
+                                label="Editing Image..." 
+                                subLabel="Processing pixels with Gemini"
+                                progressColor="bg-indigo-500"
+                            />
                         </div>
                     )}
                     {error && (
