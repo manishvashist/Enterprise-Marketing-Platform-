@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { CampaignInput } from './CampaignInput';
@@ -12,6 +14,7 @@ import { SavedCampaigns } from './SavedCampaigns';
 import { BillingView } from './billing/BillingView';
 import { UsageMessage } from './UsageMessage';
 import { authService } from '../services/authService';
+import { seedDatabase } from '../services/seedDatabase';
 
 type LiveSession = Awaited<ReturnType<typeof startTranscriptionSession>>;
 type AppView = 'campaign' | 'admin' | 'billing';
@@ -59,6 +62,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
   const [isFetchingCampaigns, setIsFetchingCampaigns] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingCampaignId, setDeletingCampaignId] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const liveSessionRef = useRef<LiveSession | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -208,6 +212,21 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
         setIsSaving(false);
     }
   }, [campaign, user, onSetGlobalSuccess, onUserUpdate]);
+
+  const handleCampaignUpdate = useCallback(async (updates: Partial<Campaign>) => {
+    if (!campaign || !user) return;
+    const updatedCampaign = { ...campaign, ...updates };
+    setCampaign(updatedCampaign);
+    
+    // Only autosave if the campaign has already been saved (has an ID)
+    if (updatedCampaign.id) {
+        try {
+           await databaseService.saveCampaign(user.id, updatedCampaign);
+        } catch(e) {
+           console.error("Autosave failed", e);
+        }
+    }
+  }, [campaign, user]);
 
   const handleLoadCampaign = useCallback((campaignToLoad: Campaign) => {
     setCampaign(campaignToLoad);
@@ -455,6 +474,19 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     };
   }, [stopRecording]);
 
+  const handleSeedDatabase = async () => {
+    setIsSeeding(true);
+    try {
+      const message = await seedDatabase();
+      onSetGlobalSuccess(message);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Seeding failed');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const isAccessBlocked = user.accountStatus === 'expired';
 
   const renderCurrentView = () => {
@@ -507,6 +539,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                             onSaveCampaign={handleSaveCampaign}
                             isSaving={isSaving}
                             onSetGlobalSuccess={onSetGlobalSuccess}
+                            onCampaignUpdate={handleCampaignUpdate}
                         />
                     </div>
                      <SavedCampaigns
@@ -524,7 +557,37 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
         case 'billing':
             return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} onSetGlobalSuccess={onSetGlobalSuccess} />;
         case 'admin':
-            return user.role === 'Admin' ? <div><h1 className="text-slate-900 text-2xl font-bold">Admin Dashboard</h1><p className="text-slate-500 mt-2">User management and system settings will be here.</p></div> : null;
+            return user.role === 'Admin' ? (
+                <div className="p-8">
+                    <h1 className="text-slate-900 text-2xl font-bold mb-6">Admin Dashboard</h1>
+                    
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm max-w-xl">
+                        <h2 className="text-lg font-semibold text-slate-800 mb-4">Database Maintenance</h2>
+                        <p className="text-slate-600 mb-6">
+                            Initialize or reset the Firestore database collections with default schemas and sample data.
+                            <br />
+                            <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded mt-2 inline-block border border-orange-100">
+                                Warning: This creates dummy data associated with your user ID.
+                            </span>
+                        </p>
+                        <button 
+                            onClick={handleSeedDatabase}
+                            disabled={isSeeding}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-slate-300 transition-colors flex items-center"
+                        >
+                            {isSeeding ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Seeding Database...
+                                </>
+                            ) : 'Generate Collections & Seed Data'}
+                        </button>
+                    </div>
+                </div>
+            ) : <div className="text-center p-10 text-slate-500">You do not have access to this area.</div>;
         default:
             return null;
     }

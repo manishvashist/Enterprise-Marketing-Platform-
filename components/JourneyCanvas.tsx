@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 // FIX: Import AssetGenerationProgress and VideoAssetState from types.ts to solve module resolution and circular dependency issues.
 import { Campaign, JourneyNode as JourneyNodeType, Branch, CampaignStrategy, Channel, ChannelConnection, User, AssetGenerationProgress, VideoAssetState } from '../types';
@@ -33,6 +35,7 @@ interface JourneyCanvasProps {
   onSaveCampaign: () => void;
   isSaving: boolean;
   onSetGlobalSuccess: (message: string | null) => void;
+  onCampaignUpdate?: (updates: Partial<Campaign>) => void;
 }
 
 type CanvasTab = 'overview' | 'journey' | 'governance' | 'channels' | 'mediaPlan' | 'assets' | 'launchpad';
@@ -163,6 +166,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
     onSaveCampaign,
     isSaving,
     onSetGlobalSuccess,
+    onCampaignUpdate,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -434,6 +438,7 @@ export const JourneyCanvas: React.FC<JourneyCanvasProps> = ({
                     user={user} 
                     campaign={campaign} 
                     onSetGlobalSuccess={onSetGlobalSuccess} 
+                    onUpdateCampaign={onCampaignUpdate}
                 />
              )}
              {activeTab === 'assets' && (

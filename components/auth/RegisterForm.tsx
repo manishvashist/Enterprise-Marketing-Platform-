@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { authService } from '../../services/authService';
 import { SocialLogins } from './SocialLogins';
 import { User } from '../../types';
 
 interface RegisterFormProps {
-  onRegisterSuccess: () => void;
+  onVerificationSent: (email: string) => void;
   onToggleView: () => void;
   onSocialLogin: (user: User) => void;
 }
@@ -19,19 +20,25 @@ const passwordStrength = (password: string) => {
   return score;
 };
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onToggleView, onSocialLogin }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onVerificationSent, onToggleView, onSocialLogin }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
   const passwordMatch = useMemo(() => password && password === confirmPassword, [password, confirmPassword]);
   const isFormValid = strength >= 4 && passwordMatch && agreedToTerms;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setPhotoFile(e.target.files[0]);
+      }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +51,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
     
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
-      await authService.register({ fullName, email, password });
-      setSuccess('Registration successful! Please check your email to confirm your account.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-    } finally {
+      await authService.register({ fullName, email, password, photoFile: photoFile || undefined });
+      onVerificationSent(email);
+    } catch (err: any) {
+      // Display user-friendly error for duplicates
+      if (err.message === 'user already exists. Sign in?') {
+          setError('user already exists. Sign in?');
+      } else {
+          setError(err.message || 'An unknown error occurred.');
+      }
       setIsLoading(false);
     }
   };
@@ -85,6 +95,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-slate-900 placeholder-slate-400 transition-all"
             />
           </div>
+          
+          <div>
+            <label htmlFor="profile-photo" className="block text-sm font-medium text-slate-700 mb-1">
+                Profile Photo (Optional)
+            </label>
+            <input 
+                type="file" 
+                id="profile-photo" 
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+            />
+          </div>
+
           <div>
             <label htmlFor="email-register" className="block text-sm font-medium text-slate-700 mb-1">
               Email Address
@@ -121,7 +145,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
           </div>
           <div>
             <label htmlFor="confirmPassword-register" className="block text-sm font-medium text-slate-700 mb-1">
-              Confirm Password
+              Repeat Password
             </label>
             <input
               id="confirmPassword-register"
@@ -160,12 +184,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
         </div>
         
         {error && <p className="text-red-600 text-sm text-center mt-4 bg-red-50 p-2 rounded border border-red-100">{error}</p>}
-        {success && <p className="text-green-700 text-sm text-center mt-4 bg-green-50 p-2 rounded border border-green-100">{success}</p>}
 
         <div className="mt-6">
           <button
             type="submit"
-            disabled={isLoading || !!success || !agreedToTerms}
+            disabled={isLoading || !agreedToTerms}
             className="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center justify-center shadow-md hover:shadow-lg"
           >
             {isLoading ? 'Creating Account...' : 'Sign Up'}

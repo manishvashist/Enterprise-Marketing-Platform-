@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
 import { User } from '../../types';
@@ -6,9 +7,11 @@ import { SocialLogins } from './SocialLogins';
 interface LoginFormProps {
   onLogin: (user: User) => void;
   onToggleView: () => void;
+  onVerificationNeeded: (email: string) => void;
+  onForgotPassword: (email: string) => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView, onVerificationNeeded, onForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,9 +24,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
 
     try {
       await authService.login(email, password);
-      // onLogin(user) is no longer needed; onAuthStateChange handles it.
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      // onLogin(user) is handled by onAuthStateChanged in App.tsx
+    } catch (err: any) {
+      const message = err.message || 'An unknown error occurred.';
+      
+      if (message === 'EMAIL_NOT_VERIFIED') {
+          onVerificationNeeded(email);
+          setIsLoading(false);
+          return;
+      }
+
+      // Display specific UI message for invalid credentials
+      if (message === 'Password or email incorrect') {
+          setError('Password or email incorrect');
+      } else {
+          setError(message);
+      }
       setIsLoading(false);
     }
   };
@@ -58,9 +74,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onToggleView }) =
             />
           </div>
           <div>
-            <label htmlFor="password-login" className="block text-sm font-medium text-slate-700 mb-1">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password-login" className="block text-sm font-medium text-slate-700">
+                Password
+                </label>
+                <button
+                    type="button"
+                    onClick={() => onForgotPassword(email)}
+                    className="text-xs font-medium text-orange-600 hover:text-orange-700"
+                >
+                    Forgot password?
+                </button>
+            </div>
             <input
               id="password-login"
               type="password"

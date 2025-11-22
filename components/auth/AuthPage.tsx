@@ -1,18 +1,48 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { VerificationSent } from './VerificationSent';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
+import { ResetLinkSent } from './ResetLinkSent';
 import { User } from '../../types';
+
+type AuthView = 'login' | 'register' | 'verification' | 'forgot-password' | 'reset-sent';
 
 interface AuthPageProps {
   onLogin: (user: User) => void;
   onBackToHome: () => void;
+  initialView?: AuthView;
+  initialEmail?: string;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onBackToHome }) => {
-  const [isLoginView, setIsLoginView] = useState(true);
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onBackToHome, initialView = 'login', initialEmail = '' }) => {
+  const [view, setView] = useState<AuthView>(initialView);
+  const [emailForContext, setEmailForContext] = useState<string>(initialEmail);
 
-  const toggleView = () => {
-    setIsLoginView(!isLoginView);
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
+
+  useEffect(() => {
+    if (initialEmail) {
+        setEmailForContext(initialEmail);
+    }
+  }, [initialEmail]);
+
+  const handleVerificationSent = (email: string) => {
+    setEmailForContext(email);
+    setView('verification');
+  };
+
+  const handleForgotPassword = (email: string) => {
+    setEmailForContext(email);
+    setView('forgot-password');
+  };
+
+  const handleResetSent = (email: string) => {
+    setEmailForContext(email);
+    setView('reset-sent');
   };
 
   return (
@@ -28,11 +58,40 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onBackToHome }) => 
             Campaign<span className="text-orange-600">Gen</span>
           </h1>
         </div>
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-slate-200">
-        {isLoginView ? (
-          <LoginForm onLogin={onLogin} onToggleView={toggleView} />
-        ) : (
-          <RegisterForm onRegisterSuccess={toggleView} onToggleView={toggleView} onSocialLogin={onLogin} />
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-slate-200 transition-all duration-500">
+        {view === 'login' && (
+          <LoginForm 
+            onLogin={onLogin} 
+            onToggleView={() => setView('register')} 
+            onVerificationNeeded={handleVerificationSent}
+            onForgotPassword={handleForgotPassword}
+          />
+        )}
+        {view === 'register' && (
+          <RegisterForm 
+            onVerificationSent={handleVerificationSent} 
+            onToggleView={() => setView('login')} 
+            onSocialLogin={onLogin} 
+          />
+        )}
+        {view === 'verification' && (
+          <VerificationSent 
+            email={emailForContext} 
+            onGoToLogin={() => setView('login')} 
+          />
+        )}
+        {view === 'forgot-password' && (
+          <ForgotPasswordForm
+            initialEmail={emailForContext}
+            onSuccess={handleResetSent}
+            onBack={() => setView('login')}
+          />
+        )}
+        {view === 'reset-sent' && (
+          <ResetLinkSent
+            email={emailForContext}
+            onGoToLogin={() => setView('login')}
+          />
         )}
       </div>
     </div>

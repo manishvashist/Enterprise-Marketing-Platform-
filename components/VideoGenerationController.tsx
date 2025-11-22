@@ -56,27 +56,27 @@ export const VideoGenerationController: React.FC<VideoGenerationControllerProps>
     };
 
     return (
-        <div className="mt-8 bg-gray-700/50 rounded-lg p-6 border border-gray-600/50">
+        <div className="mt-8 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
             <div className="flex items-center space-x-3 mb-4">
-                <VideoCameraIcon className="w-6 h-6 text-purple-400" />
-                <h3 className="font-semibold text-lg text-white">AI-Powered Video Factory</h3>
+                <VideoCameraIcon className="w-6 h-6 text-purple-600" />
+                <h3 className="font-bold text-lg text-slate-900">AI-Powered Video Factory</h3>
             </div>
 
             {!isApiKeySelected && (
-                 <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-6 text-sm text-yellow-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-sm text-yellow-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <p className="font-semibold">API Key Required for Video Generation</p>
-                        <p className="text-yellow-300/80 mt-1">
+                        <p className="font-bold text-yellow-900">API Key Required for Video Generation</p>
+                        <p className="text-yellow-700 mt-1">
                             The Veo model requires a personal API key. Please select a key to enable video generation.
                             For more details on billing, visit{' '}
-                            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-100">
+                            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-900 font-medium">
                                 ai.google.dev/gemini-api/docs/billing
                             </a>.
                         </p>
                     </div>
                     <button
                         onClick={handleSelectKey}
-                        className="flex-shrink-0 px-4 py-2 bg-yellow-600 text-white font-semibold rounded-md hover:bg-yellow-700 transition-colors"
+                        className="flex-shrink-0 px-4 py-2 bg-yellow-600 text-white font-semibold rounded-md hover:bg-yellow-700 transition-colors shadow-sm"
                     >
                         Select API Key
                     </button>
@@ -90,19 +90,19 @@ export const VideoGenerationController: React.FC<VideoGenerationControllerProps>
                     const isLoading = state.status === 'loading';
 
                     return (
-                        <div key={channel.channelName} className="bg-gray-800 rounded-lg p-4 flex flex-col justify-between border border-gray-700">
+                        <div key={channel.channelName} className="bg-slate-50 rounded-lg p-4 flex flex-col justify-between border border-slate-200">
                            <div>
                                 <div className="flex items-center space-x-3 mb-3">
                                     <span className="text-2xl">{config.icon}</span>
-                                    <p className="font-semibold text-gray-100">{channel.channelName}</p>
+                                    <p className="font-bold text-slate-800">{channel.channelName}</p>
                                 </div>
-                                <div className="text-xs text-gray-400 min-h-[3em] flex items-center">
+                                <div className="text-xs text-slate-500 min-h-[3em] flex items-center">
                                     {isLoading ? (
                                         <p>{state.progressMessage}</p>
                                     ) : state.status === 'error' ? (
-                                        <p className="text-red-400">{state.error}</p>
+                                        <p className="text-red-600">{state.error}</p>
                                     ) : state.status === 'done' ? (
-                                        <p className="text-green-400">✓ Video generation complete.</p>
+                                        <p className="text-green-600 font-medium">✓ Video generation complete.</p>
                                     ) : (
                                         <p>Generate a short video asset for this channel.</p>
                                     )}
@@ -111,7 +111,7 @@ export const VideoGenerationController: React.FC<VideoGenerationControllerProps>
                            <button
                                 onClick={() => onGenerateVideo(channel.channelName)}
                                 disabled={isLoading || !isApiKeySelected}
-                                className="mt-4 w-full px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                                className="mt-4 w-full px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-sm"
                            >
                                {isLoading ? (
                                 <>

@@ -182,7 +182,7 @@ const HeroSection: React.FC<{ onStartTrial: () => void }> = ({ onStartTrial }) =
                 <AnimatedSection delay={300} className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
                     <button 
                         onClick={onStartTrial} 
-                        className="px-12 py-5 bg-slate-900 text-white text-xl font-bold rounded-full hover:bg-slate-800 transition-all hover:scale-105 shadow-2xl shadow-slate-900/20 w-full sm:w-auto flex items-center justify-center gap-3"
+                        className="px-12 py-5 bg-slate-900 text-white text-xl font-bold rounded-full hover:bg-black transition-all hover:scale-105 shadow-2xl shadow-slate-900/30 w-full sm:w-auto flex items-center justify-center gap-3"
                     >
                         <span>View Demo</span>
                         <ArrowRightIcon className="w-6 h-6" />

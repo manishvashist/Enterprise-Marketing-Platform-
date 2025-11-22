@@ -1,3 +1,5 @@
+
+
 import React, { useState } from 'react';
 
 interface BudgetModifierProps {
@@ -16,13 +18,13 @@ export const BudgetModifier: React.FC<BudgetModifierProps> = ({ onRegenerate, is
 
     return (
         <div>
-            <h3 className="text-xl font-bold text-white">Modify Budget & Recalculate</h3>
-            <p className="text-gray-400 mt-1 mb-4 text-sm">Enter a new total budget to see how the plan adapts.</p>
+            <h3 className="text-xl font-bold text-slate-900">Modify Budget & Recalculate</h3>
+            <p className="text-slate-500 mt-1 mb-4 text-sm">Enter a new total budget to see how the plan adapts.</p>
             
-            <form onSubmit={handleSubmit} className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+            <form onSubmit={handleSubmit} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-1">
-                        <label htmlFor="new-budget" className="block text-sm font-medium text-gray-300 mb-2">New Total Budget ($)</label>
+                        <label htmlFor="new-budget" className="block text-sm font-medium text-slate-700 mb-2">New Total Budget ($)</label>
                         <input
                             type="number"
                             id="new-budget"
@@ -30,18 +32,18 @@ export const BudgetModifier: React.FC<BudgetModifierProps> = ({ onRegenerate, is
                             onChange={(e) => setNewBudget(e.target.value)}
                             placeholder="e.g., 250000"
                             required
-                            className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-200 placeholder-gray-500"
+                            className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-900 placeholder-slate-400"
                         />
                     </div>
                     <div className="md:col-span-2">
-                        <label htmlFor="constraints" className="block text-sm font-medium text-gray-300 mb-2">Channel Priorities or Constraints (Optional)</label>
+                        <label htmlFor="constraints" className="block text-sm font-medium text-slate-700 mb-2">Channel Priorities or Constraints (Optional)</label>
                         <input
                             type="text"
                             id="constraints"
                             value={constraints}
                             onChange={(e) => setConstraints(e.target.value)}
                             placeholder="e.g., Must-have channels: Google Search, LinkedIn. Reduce display ads first."
-                            className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-200 placeholder-gray-500"
+                            className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-900 placeholder-slate-400"
                         />
                     </div>
                 </div>
@@ -49,7 +51,7 @@ export const BudgetModifier: React.FC<BudgetModifierProps> = ({ onRegenerate, is
                     <button 
                         type="submit"
                         disabled={isRegenerating || !newBudget}
-                        className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all"
+                        className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
                         {isRegenerating ? 'Recalculating...' : 'Recalculate Plan'}
                     </button>

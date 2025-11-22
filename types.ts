@@ -178,6 +178,18 @@ export interface ChannelAssetGenerationResult {
     implementationGuidance: ImplementationGuidance;
 }
 
+// --- NEW TYPES for Media Plan ---
+export interface MediaPlanInputs {
+    campaignName: string;
+    objectives: string;
+    audience: string;
+    geo: string;
+    industry: string;
+    product: string;
+    competitors: string;
+    keywords: string;
+    duration: string;
+}
 
 export interface Campaign {
   id?: string; // Optional to allow for unsaved campaigns in-memory
@@ -197,6 +209,8 @@ export interface Campaign {
   governancePlan: GovernancePlan;
   channelSelection?: ChannelSelectionInterface;
   channelAssets?: Record<string, ChannelAssetGenerationResult>;
+  mediaPlan?: string;
+  mediaPlanInputs?: MediaPlanInputs;
   nodes: JourneyNode[];
 }
 
@@ -351,17 +365,4 @@ export interface User {
   trialEndDate: string | null;
   trialCampaignsUsed: number;
   activeSubscription: UserSubscription | null;
-}
-
-// --- NEW TYPES for Media Plan ---
-export interface MediaPlanInputs {
-    campaignName: string;
-    objectives: string;
-    audience: string;
-    geo: string;
-    industry: string;
-    product: string;
-    competitors: string;
-    keywords: string;
-    duration: string;
 }

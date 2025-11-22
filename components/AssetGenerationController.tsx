@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 // FIX: Import AssetGenerationProgress from types.ts to solve module resolution and circular dependency issues.
 import { AssetGenerationProgress, Channel } from '../types';
@@ -69,22 +67,22 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
     }, {} as Record<string, (Channel & { category: string })[]>);
 
     return (
-        <div className="mt-8 bg-gray-700/50 rounded-lg p-6 border border-gray-600/50">
-            <h3 className="font-semibold text-lg text-white mb-4">AI-Powered Content Factory</h3>
+        <div className="mt-8 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-lg text-slate-900 mb-4">AI-Powered Content Factory</h3>
 
             {/* Overall Progress */}
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
+            <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-100">
                 <div className="flex justify-between items-center text-sm mb-2">
-                    <span className="font-medium text-gray-200">Overall Progress</span>
-                    <span className="text-gray-400">{progress.completedChannels} / {progress.totalChannels} channels completed</span>
+                    <span className="font-medium text-slate-700">Overall Progress</span>
+                    <span className="text-slate-500">{progress.completedChannels} / {progress.totalChannels} channels completed</span>
                 </div>
-                <div className="w-full bg-gray-900 rounded-full h-4 overflow-hidden">
+                <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
                     <div
                         className="bg-teal-500 h-4 rounded-full transition-all duration-500"
                         style={{ width: `${overallPercentage}%` }}
                     ></div>
                 </div>
-                 <div className="text-right text-xs text-gray-400 mt-2">
+                 <div className="text-right text-xs text-slate-400 mt-2">
                     Estimated time remaining: {formatTime(totalEstimatedTime)}
                 </div>
             </div>
@@ -94,7 +92,7 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
                 {/* FIX: Explicitly type `channels` to resolve 'unknown' type error. */}
                 {Object.entries(groupedChannels).map(([category, channels]: [string, (Channel & { category: string })[]]) => (
                     <div key={category}>
-                        <h4 className="font-medium text-gray-300 mb-3">{category}</h4>
+                        <h4 className="font-semibold text-slate-800 mb-3">{category}</h4>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {channels.map(channel => {
                                 const channelProgress = progress.channelProgress[channel.channelName];
@@ -112,10 +110,10 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
                                 
                                 const getBorderColor = () => {
                                     switch (status) {
-                                        case 'in-progress': return 'border-cyan-500';
-                                        case 'completed': return 'border-teal-500';
-                                        case 'error': return 'border-red-500';
-                                        default: return 'border-gray-600 hover:border-cyan-400';
+                                        case 'in-progress': return 'border-cyan-500 ring-1 ring-cyan-500';
+                                        case 'completed': return 'border-teal-500 ring-1 ring-teal-500';
+                                        case 'error': return 'border-red-500 ring-1 ring-red-500';
+                                        default: return 'border-slate-200 hover:border-cyan-400 hover:shadow-md';
                                     }
                                 };
 
@@ -124,17 +122,17 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
                                         key={channel.channelName}
                                         onClick={() => onGenerateForChannel(channel.channelName, channel.category)}
                                         disabled={status === 'in-progress' || progress.isGeneratingAll}
-                                        className={`relative text-left p-3 bg-gray-800 rounded-lg border-2 ${getBorderColor()} transition-all disabled:opacity-70 disabled:cursor-wait`}
+                                        className={`relative text-left p-3 bg-white rounded-lg border ${getBorderColor()} transition-all disabled:opacity-70 disabled:cursor-wait shadow-sm`}
                                     >
                                         <div className="flex items-center space-x-3">
                                             <span className="text-2xl">{config.icon}</span>
                                             <div>
-                                                <p className="font-semibold text-sm text-gray-100">{channel.channelName}</p>
-                                                <p className="text-xs text-gray-400">{getStatusText()}</p>
+                                                <p className="font-semibold text-sm text-slate-900">{channel.channelName}</p>
+                                                <p className="text-xs text-slate-500">{getStatusText()}</p>
                                             </div>
                                         </div>
                                         {status === 'in-progress' && (
-                                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-b-md overflow-hidden">
+                                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 rounded-b-md overflow-hidden">
                                                 <div className="bg-cyan-500 h-1" style={{ width: `${channelProgress.percentage}%` }}></div>
                                             </div>
                                         )}
@@ -153,18 +151,18 @@ export const AssetGenerationController: React.FC<AssetGenerationControllerProps>
             </div>
             
             {/* Bulk Actions */}
-            <div className="mt-8 pt-6 border-t border-gray-600/50 flex flex-col sm:flex-row gap-4">
+            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
                  <button
                     onClick={onGenerateForAll}
                     disabled={progress.isGeneratingAll || progress.completedChannels === progress.totalChannels}
-                    className="flex-1 px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-md hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-md hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
                     {progress.isGeneratingAll ? 'Generating...' : 'Generate All Selected Channels'}
                 </button>
                 <button
                     onClick={onReset}
                     disabled={progress.isGeneratingAll}
-                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-500 disabled:opacity-50 transition-colors"
+                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-white text-slate-700 border border-slate-300 font-semibold rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-sm"
                 >
                     Reset Progress
                 </button>

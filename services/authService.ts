@@ -1,150 +1,219 @@
 
-
-
-import { User, ConnectedAccount, AuthProvider } from '../types';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    updateProfile, 
+    sendEmailVerification, 
+    sendPasswordResetEmail,
+    onAuthStateChanged,
+    User as FirebaseUser,
+    GoogleAuthProvider,
+    GithubAuthProvider,
+    FacebookAuthProvider,
+    OAuthProvider,
+    signInWithPopup
+} from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, storage } from "./firebaseClient";
 import { databaseService } from './databaseService';
-import { supabase } from './supabaseClient';
+import { User, ConnectedAccount, AuthProvider } from '../types';
 import { initialChannelConnections } from '../data/channels';
 
-// Helper to construct the full User object by combining Supabase auth data and our profile data
-const getFullUser = async (supabaseUser: import('@supabase/supabase-js').User): Promise<User | null> => {
-  if (!supabase) throw new Error("Supabase is not configured.");
-  let profile = await databaseService.getProfile(supabaseUser.id);
-  
-  if (!profile) {
-    // Profile doesn't exist, let's create it. This is crucial for first-time social logins
-    // or if the DB trigger failed for any reason.
-    console.warn(`Profile for user ${supabaseUser.id} not found. Creating one.`);
+export const authService = {
+  async register(data: { fullName: string; email: string; password: string; photoFile?: File }): Promise<void> {
     try {
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
+        // 1. Create User in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const firebaseUser = userCredential.user;
 
-        const newProfileData: Partial<User> = {
-            id: supabaseUser.id,
-            fullName: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'New User',
-            email: supabaseUser.email!,
+        let photoURL = "";
+
+        // 2. Upload Photo if provided (Try/Catch to be safe if Storage isn't enabled)
+        if (data.photoFile && storage) {
+            try {
+                const storageRef = ref(storage, `profile_photos/${firebaseUser.uid}`);
+                await uploadBytes(storageRef, data.photoFile);
+                photoURL = await getDownloadURL(storageRef);
+            } catch (storageError) {
+                console.warn("Profile photo upload failed (Storage might be disabled):", storageError);
+            }
+        }
+
+        // 3. Update Firebase Profile
+        await updateProfile(firebaseUser, {
+            displayName: data.fullName,
+            photoURL: photoURL || null
+        });
+
+        // 4. Create Local Profile
+        const newProfile: Partial<User> = {
+            id: firebaseUser.uid,
+            email: data.email,
+            fullName: data.fullName,
+            authProvider: 'email',
             role: 'User',
-            authProvider: (supabaseUser.app_metadata?.provider as AuthProvider) || 'email',
             channelConnections: initialChannelConnections,
             accountStatus: 'trial',
             trialStartDate: new Date().toISOString(),
-            trialEndDate: trialEndDate.toISOString(),
-            trialCampaignsUsed: 0,
-            activeSubscription: null,
+            trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days trial
+            trialCampaignsUsed: 0
         };
-        profile = await databaseService.createProfile(newProfileData);
+        await databaseService.createProfile(newProfile);
 
-        if (!profile) {
-            throw new Error("Profile creation returned null.");
+        // 5. Send Verification Email
+        await sendEmailVerification(firebaseUser);
+
+        // 6. Sign Out immediately. User must not be logged in until verified.
+        await signOut(auth);
+
+    } catch (error: any) {
+        console.error("Registration Error:", error);
+        if (error.code === 'auth/email-already-in-use') {
+            throw new Error('user already exists. Sign in?');
         }
-
-    } catch (creationError) {
-        console.error("Failed to create user profile on-the-fly:", creationError);
-        throw creationError; // Re-throw the specific error from databaseService.
+        throw error;
     }
-  }
-
-  // NEW CHECK: Ensure channel connections exist, even for profiles created by the trigger.
-  // This makes the app more resilient if the trigger doesn't populate defaults.
-  if (profile && (!profile.channelConnections || Object.keys(profile.channelConnections).length === 0)) {
-      console.warn(`Profile for user ${profile.id} is missing channel connections. Populating with defaults.`);
-      const updatedProfile = await databaseService.updateProfile(profile.id, { channelConnections: initialChannelConnections });
-      if (updatedProfile) {
-          profile = updatedProfile;
-      }
-  }
-  
-  // Merge data from Supabase Auth and our public profiles table
-  const fullUser: User = {
-    ...profile,
-    email: supabaseUser.email || profile.email, // Always prefer the verified email from Supabase
-    createdAt: supabaseUser.created_at || profile.createdAt,
-    lastLogin: supabaseUser.last_sign_in_at || profile.lastLogin,
-  };
-  return fullUser;
-};
-
-export const authService = {
-  async register(data: { fullName: string; email: string; password: string; }): Promise<void> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-          // A trigger in Supabase will use this to create the user's profile in the database
-        },
-        emailRedirectTo: window.location.origin,
-      }
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-    if (!authData.user) {
-      throw new Error("Registration succeeded but no user was returned.");
-    }
-    // The onAuthStateChange listener in App.tsx will handle the user state.
   },
 
   async login(email: string, password: string): Promise<User> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw new Error(error.message);
-    if (!data.user) throw new Error("Login failed, please try again.");
-    
-    const user = await getFullUser(data.user);
-    if (!user) throw new Error("Could not retrieve user profile after login.");
-    
-    return user;
-  },
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
 
-  // FIX: Updated provider type to exclude 'email' as it's not a valid OAuth provider for signInWithOAuth.
-  // This resolves the TypeScript error where AuthProvider was not assignable to Supabase's Provider type.
-  async loginWithProvider(provider: Exclude<AuthProvider, 'email'>): Promise<void> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        redirectTo: window.location.origin,
-      }
-    });
+        // 1. ENSURE PROFILE EXISTS FIRST
+        // We do this BEFORE checking verification so that we don't end up with an authenticated
+        // but profile-less user if the verification check throws.
+        let userProfile = await databaseService.getProfile(firebaseUser.uid);
+        if (!userProfile) {
+             const newProfile: Partial<User> = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || email,
+                fullName: firebaseUser.displayName || 'User',
+                authProvider: 'email',
+                role: 'User',
+                channelConnections: initialChannelConnections,
+                accountStatus: 'trial',
+                trialStartDate: new Date().toISOString(),
+                trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                trialCampaignsUsed: 0
+            };
+            userProfile = await databaseService.createProfile(newProfile);
+        }
 
-    if (error) {
-      throw new Error(`Failed to sign in with ${provider}: ${error.message}`);
+        // 2. Reload user to get the latest emailVerified status
+        await firebaseUser.reload();
+
+        // 3. Check Verification
+        if (!firebaseUser.emailVerified) {
+            // Resend verification email to ensure user has it. 
+            // Wrap in try/catch to avoid failing the flow if rate limited or network error occurs on resend.
+            try {
+                await sendEmailVerification(firebaseUser);
+            } catch (emailError) {
+                console.warn("Failed to resend verification email during login attempt:", emailError);
+            }
+            
+            // DO NOT signOut here. If we signOut, the onAuthStateChanged listener in App.tsx
+            // will receive null and redirect the user to the Landing Page.
+            // We throw the error so LoginForm can handle it and show the Verification screen.
+            throw new Error('EMAIL_NOT_VERIFIED');
+        }
+
+        return userProfile as User;
+
+    } catch (error: any) {
+        // Suppress console logging for expected flow control errors
+        if (error.message !== 'EMAIL_NOT_VERIFIED') {
+            console.error("Login Error:", error);
+        }
+
+        if (error.message === 'EMAIL_NOT_VERIFIED') {
+            throw error;
+        }
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
+            throw new Error('Password or email incorrect');
+        }
+        throw error;
     }
-    // Supabase redirects, so the user object will be handled by onAuthStateChange in App.tsx
   },
 
-  async logout(): Promise<void> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error("Error logging out:", error.message);
+  async loginWithProvider(providerName: Exclude<AuthProvider, 'email'>): Promise<void> {
+    try {
+        let provider: any;
+        switch (providerName) {
+            case 'google': provider = new GoogleAuthProvider(); break;
+            case 'github': provider = new GithubAuthProvider(); break;
+            case 'facebook': provider = new FacebookAuthProvider(); break;
+            case 'azure': provider = new OAuthProvider('microsoft.com'); break;
+            default: throw new Error(`Provider ${providerName} not supported`);
+        }
+
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+
+        // Check/Create Profile
+        let userProfile = await databaseService.getProfile(firebaseUser.uid);
+        if (!userProfile) {
+             const newProfile: Partial<User> = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                fullName: firebaseUser.displayName || `New ${providerName} User`,
+                authProvider: providerName,
+                role: 'User',
+                channelConnections: initialChannelConnections,
+                accountStatus: 'trial',
+                trialStartDate: new Date().toISOString(),
+                trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                trialCampaignsUsed: 0
+            };
+            await databaseService.createProfile(newProfile);
+        }
+
+    } catch (error: any) {
+        console.error("Social Login Error:", error);
         throw new Error(error.message);
     }
   },
 
+  async logout(): Promise<void> {
+    await signOut(auth);
+  },
+
   async getCurrentUser(): Promise<User | null> {
-    if (!supabase) return null; // Return null if not configured, as this is called on init
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error("Error fetching session:", error.message);
-      return null;
-    }
-    if (!session?.user) {
-      return null;
-    }
-    
-    return await getFullUser(session.user);
+    return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            unsubscribe();
+            if (firebaseUser) {
+                // We fetch the profile regardless of verification status.
+                // App.tsx will decide whether to let the user into the app or show the auth/verification screen.
+                let profile = await databaseService.getProfile(firebaseUser.uid);
+                
+                // If profile is missing but auth is valid (e.g., cleared localStorage), recreate it.
+                if (!profile) {
+                    const newProfile: Partial<User> = {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email || '',
+                        fullName: firebaseUser.displayName || 'User',
+                        authProvider: 'email',
+                        role: 'User',
+                        channelConnections: initialChannelConnections,
+                        accountStatus: 'trial',
+                        trialStartDate: new Date().toISOString(),
+                        trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        trialCampaignsUsed: 0
+                    };
+                    profile = await databaseService.createProfile(newProfile);
+                }
+                resolve(profile);
+            } else {
+                resolve(null);
+            }
+        });
+    });
   },
 
   async updateUserConnection(userId: string, channelId: string, account: ConnectedAccount | null): Promise<User | null> {
-    if (!supabase) throw new Error("Supabase is not configured.");
     const user = await databaseService.getProfile(userId);
     if (!user) return null;
 
@@ -162,51 +231,52 @@ export const authService = {
   },
 
   async updateProfile(userId: string, updates: { fullName?: string; email?: string }): Promise<User> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    if (updates.email) {
-      const { error } = await supabase.auth.updateUser({ email: updates.email });
-      if (error) throw new Error(error.message);
+    await databaseService.updateProfile(userId, updates);
+    
+    if (auth.currentUser && updates.fullName) {
+        await updateProfile(auth.currentUser, { displayName: updates.fullName });
     }
 
-    if (updates.fullName) {
-       await databaseService.updateProfile(userId, { fullName: updates.fullName });
-    }
-    
-    const updatedUser = await this.getCurrentUser();
+    const updatedUser = await databaseService.getProfile(userId);
     if (!updatedUser) throw new Error("Failed to fetch updated user profile.");
+    
     return updatedUser;
   },
 
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    if (!supabase) throw new Error("Supabase is not configured.");
-    
-    // 1. First, verify the current password is correct by trying to sign in.
-    // This makes the feature behave as the user expects and refreshes the session.
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
-        throw new Error("User not found or email is missing. Cannot verify password.");
-    }
+      if (auth.currentUser && auth.currentUser.email) {
+          await sendPasswordResetEmail(auth, auth.currentUser.email);
+      }
+  },
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-    });
+  async sendPasswordResetEmail(email: string): Promise<void> {
+      await sendPasswordResetEmail(auth, email);
+  },
 
-    if (signInError) {
-        // Provide a more specific error message for invalid credentials.
-        if (signInError.message.includes('Invalid login credentials')) {
-             throw new Error("The current password you entered is incorrect.");
-        }
-        throw new Error(`Password verification failed: ${signInError.message}`);
-    }
-
-    // 2. If verification is successful, update to the new password.
-    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-    if (updateError) {
-        throw new Error(`Failed to update to new password: ${updateError.message}`);
-    }
-    
-    // 3. Explicitly sign out to ensure onAuthStateChange is triggered and session is cleared.
-    await this.logout();
+  onAuthStateChanged(callback: (user: User | null) => void): () => void {
+      return onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+              // Always return profile, verification check moves to UI layer
+              let profile = await databaseService.getProfile(firebaseUser.uid);
+              if (!profile) {
+                    const newProfile: Partial<User> = {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email || '',
+                        fullName: firebaseUser.displayName || 'User',
+                        authProvider: 'email',
+                        role: 'User',
+                        channelConnections: initialChannelConnections,
+                        accountStatus: 'trial',
+                        trialStartDate: new Date().toISOString(),
+                        trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        trialCampaignsUsed: 0
+                    };
+                    profile = await databaseService.createProfile(newProfile);
+              }
+              callback(profile);
+          } else {
+              callback(null);
+          }
+      });
   }
 };
