@@ -142,7 +142,11 @@ export const authService = {
     try {
         let provider: any;
         switch (providerName) {
-            case 'google': provider = new GoogleAuthProvider(); break;
+            case 'google': 
+                provider = new GoogleAuthProvider(); 
+                provider.addScope('profile');
+                provider.addScope('email');
+                break;
             case 'github': provider = new GithubAuthProvider(); break;
             case 'facebook': provider = new FacebookAuthProvider(); break;
             case 'azure': provider = new OAuthProvider('microsoft.com'); break;
@@ -172,7 +176,20 @@ export const authService = {
 
     } catch (error: any) {
         console.error("Social Login Error:", error);
-        throw new Error(error.message);
+        
+        // Provide specific, helpful instructions for common auth errors
+        if (error.code === 'auth/unauthorized-domain') {
+            const hostname = window.location.hostname;
+            throw new Error(`Domain unauthorized: "${hostname}". Add this domain to Firebase Console > Authentication > Settings > Authorized Domains.`);
+        }
+        if (error.code === 'auth/popup-closed-by-user') {
+            throw new Error('Sign-in cancelled by user.');
+        }
+        if (error.code === 'auth/popup-blocked') {
+            throw new Error('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+        }
+        
+        throw new Error(error.message || 'Social login failed. Please try again.');
     }
   },
 

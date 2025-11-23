@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
 import { AuthProvider, User } from '../../types';
 import { GoogleIcon } from '../icons/GoogleIcon';
+// Import other icons but they might be unused if we comment out providers
 import { GitHubIcon } from '../icons/GitHubIcon';
 import { MicrosoftIcon } from '../icons/MicrosoftIcon';
 import { FacebookIcon } from '../icons/FacebookIcon';
@@ -28,17 +30,18 @@ export const SocialLogins: React.FC<SocialLoginsProps> = ({ onSocialLogin, conte
         }
     };
     
-    // FIX: Updated provider list to use 'azure' for Microsoft and added display names for the UI.
+    // Updated provider list to focus on Google as it is the enabled provider.
+    // Uncomment others as you enable them in Firebase Console.
     const providers: { name: Exclude<AuthProvider, 'email'>; icon: React.ReactNode; displayName: string; }[] = [
         { name: 'google', icon: <GoogleIcon className="w-5 h-5" />, displayName: 'Google' },
-        { name: 'github', icon: <GitHubIcon className="w-5 h-5" />, displayName: 'GitHub' },
-        { name: 'azure', icon: <MicrosoftIcon className="w-5 h-5" />, displayName: 'Microsoft' },
-        { name: 'facebook', icon: <FacebookIcon className="w-5 h-5" />, displayName: 'Facebook' },
+        // { name: 'github', icon: <GitHubIcon className="w-5 h-5" />, displayName: 'GitHub' },
+        // { name: 'azure', icon: <MicrosoftIcon className="w-5 h-5" />, displayName: 'Microsoft' },
+        // { name: 'facebook', icon: <FacebookIcon className="w-5 h-5" />, displayName: 'Facebook' },
     ];
 
     return (
         <div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
                 {providers.map(provider => (
                     <button
                         key={provider.name}
@@ -56,7 +59,7 @@ export const SocialLogins: React.FC<SocialLoginsProps> = ({ onSocialLogin, conte
                         ) : (
                             provider.icon
                         )}
-                         <span className="ml-3 capitalize hidden sm:inline">{provider.displayName}</span>
+                         <span className="ml-3 capitalize">{context} with {provider.displayName}</span>
                     </button>
                 ))}
             </div>

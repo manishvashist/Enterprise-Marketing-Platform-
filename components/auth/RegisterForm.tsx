@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { authService } from '../../services/authService';
 import { SocialLogins } from './SocialLogins';
@@ -8,6 +7,8 @@ interface RegisterFormProps {
   onVerificationSent: (email: string) => void;
   onToggleView: () => void;
   onSocialLogin: (user: User) => void;
+  onTermsClick: () => void;
+  onPrivacyClick: () => void;
 }
 
 const passwordStrength = (password: string) => {
@@ -20,7 +21,7 @@ const passwordStrength = (password: string) => {
   return score;
 };
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onVerificationSent, onToggleView, onSocialLogin }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onVerificationSent, onToggleView, onSocialLogin, onTermsClick, onPrivacyClick }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -170,13 +171,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onVerificationSent, 
               <div className="ml-3 text-sm">
                   <label htmlFor="terms" className="font-medium text-slate-500">
                       I agree to the{' '}
-                      <a href="#" className="text-orange-600 hover:text-orange-700">
+                      <button 
+                        type="button" 
+                        onClick={onTermsClick}
+                        className="text-orange-600 hover:text-orange-700 underline focus:outline-none"
+                      >
                           Terms of Service
-                      </a>{' '}
+                      </button>{' '}
                       and{' '}
-                      <a href="#" className="text-orange-600 hover:text-orange-700">
+                      <button 
+                        type="button" 
+                        onClick={onPrivacyClick}
+                        className="text-orange-600 hover:text-orange-700 underline focus:outline-none"
+                      >
                           Privacy Policy
-                      </a>
+                      </button>
                       .
                   </label>
               </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircleIcon } from '../icons/CheckCircleIcon';
 
@@ -109,7 +110,7 @@ const MapIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const AdjustmentsHorizontalIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5M3.75 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M16.5 12h2.25" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 18H7.5M3.75 12h9.75m-9.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M16.5 12h2.25" />
   </svg>
 );
 
@@ -283,46 +284,136 @@ const PublicPricingPage = ({ onStartTrial }: { onStartTrial: () => void }) => (
 );
 
 const ComparisonPage = ({ onStartTrial }: { onStartTrial: () => void }) => (
-    <div className="pt-24 pb-16">
+    <div className="pt-24 pb-16 bg-slate-50">
         <div className="container mx-auto px-6">
+            {/* Header */}
             <div className="text-center max-w-3xl mx-auto mb-16">
-                <h1 className="text-4xl font-bold text-slate-900 mb-6">CampaignGen vs. The Others</h1>
-                <p className="text-xl text-slate-500">Most AI tools just write text. We build entire marketing ecosystems. See how we stack up against generic AI writers.</p>
+                <div className="inline-block px-3 py-1 mb-4 text-xs font-bold tracking-wider text-indigo-600 uppercase bg-indigo-100 rounded-full">
+                    Competitive Analysis
+                </div>
+                <h1 className="text-4xl font-bold text-slate-900 mb-6">Don't settle for a "Writing Assistant"</h1>
+                <p className="text-xl text-slate-500">Most AI tools help you type faster. CampaignGen helps you run a marketing department. See the difference.</p>
             </div>
 
-            <div className="overflow-x-auto max-w-5xl mx-auto bg-white rounded-2xl shadow-lg border border-slate-200">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="p-6 text-sm font-bold text-slate-500 uppercase tracking-wider">Feature</th>
-                            <th className="p-6 text-lg font-bold text-indigo-600 w-1/3 bg-indigo-50/50">CampaignGen</th>
-                            <th className="p-6 text-lg font-bold text-slate-400 w-1/3">Generic AI Writers</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {[
-                            { feature: "Multi-Channel Synchronization", us: "✅ Automated", them: "❌ Manual Copy/Paste" },
-                            { feature: "Brand Consistency Engine", us: "✅ Learned Style Profile", them: "⚠️ Basic Tone Settings" },
-                            { feature: "Direct Integration (HubSpot/Ads)", us: "✅ One-Click Export", them: "❌ None" },
-                            { feature: "Campaign Strategy Generation", us: "✅ Full Media Plan", them: "❌ Content Only" },
-                            { feature: "Visual Asset Generation", us: "✅ Images & Video Scripts", them: "⚠️ Text Only (Mostly)" },
-                            { feature: "Governance & Compliance Checks", us: "✅ Built-in", them: "❌ None" }
-                        ].map((row, idx) => (
-                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                <td className="p-6 font-medium text-slate-900">{row.feature}</td>
-                                <td className="p-6 font-bold text-slate-800 bg-indigo-50/30">{row.us}</td>
-                                <td className="p-6 text-slate-500">{row.them}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Comparison Table */}
+            <div className="overflow-hidden max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 mb-24">
+                <div className="grid grid-cols-1 md:grid-cols-3 bg-slate-900 text-white p-6 text-sm font-bold uppercase tracking-wider gap-4 md:gap-0">
+                    <div className="flex items-center">Capability</div>
+                    <div className="flex items-center text-orange-400">CampaignGen</div>
+                    <div className="flex items-center text-slate-400">Standard AI Writers</div>
+                </div>
+                <div className="divide-y divide-slate-100">
+                    {[
+                        { feature: "Workflow", us: "End-to-End Campaign Orchestration", them: "Single Asset Generation" },
+                        { feature: "Strategic Context", us: "Ingests Brand Strategy & KPIs", them: "Session-based (Forgets context)" },
+                        { feature: "Multi-Channel Sync", us: "1 Prompt = Email + Social + Ads + Video", them: "Manual Prompting per Channel" },
+                        { feature: "Brand Guardrails", us: "Strict Tone & Style Enforcement", them: "Loose 'Voice' Settings" },
+                        { feature: "Visual Generation", us: "Native Image & Video Creation", them: "Text Only (or separate tool)" },
+                        { feature: "Compliance", us: "Enterprise Governance & Safety", them: "None (User Liability)" },
+                        { feature: "Integrations", us: "Direct Push to HubSpot/Meta/Google", them: "Copy & Paste" },
+                        { feature: "Optimization", us: "Closed-Loop Performance Learning", them: "None" }
+                    ].map((row, idx) => (
+                        <div key={idx} className="grid grid-cols-1 md:grid-cols-3 p-6 hover:bg-slate-50 transition-colors items-center gap-4 md:gap-0">
+                            <div className="font-bold text-slate-900">{row.feature}</div>
+                            <div className="font-bold text-indigo-600 flex items-center gap-2">
+                                <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                {row.us}
+                            </div>
+                            <div className="text-slate-500 flex items-center gap-2">
+                                <span className="text-red-400 text-lg font-bold flex-shrink-0">×</span>
+                                {row.them}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div className="mt-16 text-center bg-slate-900 rounded-2xl p-12 text-white">
-                <h2 className="text-3xl font-bold mb-6">Stop settling for fragmented tools.</h2>
-                <button onClick={onStartTrial} className="px-8 py-4 bg-orange-600 text-white text-lg font-bold rounded-full hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20">
-                    Switch to CampaignGen
+            {/* Cost/Value Section - NEW */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24 max-w-6xl mx-auto items-center">
+                <div>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">The Cost of Fragmentation</h2>
+                    <p className="text-slate-500 leading-relaxed mb-6">
+                        Piecing together single-purpose tools costs more than you think. Subscription fatigue, context switching, and disjointed data silos slow your team down.
+                    </p>
+                    <ul className="space-y-4">
+                        <li className="flex items-center text-slate-700">
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-3 font-bold text-xs">-$2k</div>
+                            <span>Average monthly spend on separate AI tools</span>
+                        </li>
+                        <li className="flex items-center text-slate-700">
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-3 font-bold text-xs">-15h</div>
+                            <span>Hours lost per week copying data between tools</span>
+                        </li>
+                        <li className="flex items-center text-slate-700">
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-3 font-bold text-xs">Risk</div>
+                            <span>Brand inconsistency across channels</span>
+                        </li>
+                    </ul>
+                </div>
+                <div className="bg-slate-900 rounded-2xl p-8 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-bold mb-2">CampaignGen Consolidation</h3>
+                        <p className="text-slate-400 text-sm mb-8">Replace your stack with one engine.</p>
+                        
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg border border-white/10">
+                                <span>Copywriting Tool</span>
+                                <span className="text-slate-400 line-through">$49/mo</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg border border-white/10">
+                                <span>Image Generator</span>
+                                <span className="text-slate-400 line-through">$30/mo</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg border border-white/10">
+                                <span>Social Scheduler</span>
+                                <span className="text-slate-400 line-through">$99/mo</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-lg mt-4 transform scale-105">
+                                <span className="font-bold">CampaignGen All-in-One</span>
+                                <span className="font-bold text-xl">$10/mo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Three Pillars */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-24 max-w-6xl mx-auto">
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+                        <ChartBarSquareIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Contextual Intelligence</h3>
+                    <p className="text-slate-500 leading-relaxed">We don't just fill empty boxes with text. We analyze your audience and goals to prescribe *what* you should say, *where* you should say it, and *how much* you should spend.</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600 mb-6">
+                        <NetworkIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Omnichannel Native</h3>
+                    <p className="text-slate-500 leading-relaxed">Update your campaign goal, and watch the change ripple across your emails, ads, and social posts instantly. No more disjointed messaging across channels.</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600 mb-6">
+                        <ShieldCheckIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-3">Brand Assurance</h3>
+                    <p className="text-slate-500 leading-relaxed">Sleep soundly knowing your AI content is checked for regulatory compliance, spam triggers, and brand alignment before it ever sees the light of day.</p>
+                </div>
+            </div>
+
+            {/* Final CTA */}
+            <div className="text-center bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-12 md:p-16 text-white relative overflow-hidden shadow-2xl max-w-5xl mx-auto">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-500 opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none"></div>
+                
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 relative z-10">Stop piecing together a solution.</h2>
+                <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto relative z-10">Get the only platform that combines strategy, creation, and execution in one intelligent workflow.</p>
+                
+                <button onClick={onStartTrial} className="px-10 py-4 bg-orange-600 text-white text-xl font-bold rounded-full hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20 relative z-10 hover:scale-105">
+                    Start Your Free Trial
                 </button>
+                <p className="mt-4 text-sm text-slate-400 relative z-10">14-day free trial · No credit card required</p>
             </div>
         </div>
     </div>
