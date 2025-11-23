@@ -27,9 +27,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView, user, onLo
       <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center cursor-pointer group" onClick={() => setView('campaign')}>
            <div className="bg-gradient-to-br from-orange-500 to-orange-600 w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30 mr-3 group-hover:scale-110 transition-transform duration-300">
-             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.82m5.84-2.56a6 6 0 01-2.56 5.84m-2.56-5.84a6 6 0 01-5.84-2.56m11.2 0a6 6 0 01-5.84 2.56M12 21a9 9 0 110-18 9 9 0 010 18z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 10.5h6m-3.75-3.75v7.5" />
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
              </svg>
            </div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">
