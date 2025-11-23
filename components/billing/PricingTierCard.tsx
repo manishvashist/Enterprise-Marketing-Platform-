@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubscriptionPlan, BillingType } from '../../types';
 import { CheckCircleIcon } from '../icons/CheckCircleIcon';

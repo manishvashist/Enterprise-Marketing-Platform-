@@ -12,18 +12,17 @@ interface KpiData {
     history: number[];
 }
 
-const HISTORY_LENGTH = 20; // Number of data points for the sparkline
+const HISTORY_LENGTH = 20; 
 
 const getInitialValue = (kpi: string): number => {
-    if (kpi.toLowerCase().includes('rate')) return Math.random() * 20 + 5; // e.g., Open Rate ~5-25%
-    if (kpi.toLowerCase().includes('value')) return Math.random() * 50 + 20; // e.g., Avg Order Value ~$20-70
-    return Math.random() * 1000 + 100; // Generic metric
+    if (kpi.toLowerCase().includes('rate')) return Math.random() * 20 + 5;
+    if (kpi.toLowerCase().includes('value')) return Math.random() * 50 + 20; 
+    return Math.random() * 1000 + 100; 
 };
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis }) => {
     const [data, setData] = useState<Record<string, KpiData>>({});
 
-    // Initialize state when KPIs change
     useEffect(() => {
         const initialState: Record<string, KpiData> = {};
         kpis.forEach(kpi => {
@@ -37,14 +36,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis }) 
         setData(initialState);
     }, [kpis]);
 
-    // Simulate real-time data updates
     useEffect(() => {
         const interval = setInterval(() => {
             setData(prevData => {
                 const newData: Record<string, KpiData> = {};
                 Object.keys(prevData).forEach(kpi => {
                     const oldData = prevData[kpi];
-                    const change = (Math.random() - 0.45) * (oldData.value * 0.05); // +/- up to 5% change
+                    const change = (Math.random() - 0.45) * (oldData.value * 0.05);
                     const newValue = Math.max(0, oldData.value + change);
                     const newHistory = [...oldData.history.slice(1), newValue];
 
@@ -56,7 +54,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis }) 
                 });
                 return newData;
             });
-        }, 3000); // Update every 3 seconds
+        }, 3000); 
 
         return () => clearInterval(interval);
     }, []);
@@ -64,14 +62,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis }) 
     if (kpis.length === 0) return null;
 
     return (
-        <div className="bg-gray-700/50 rounded-lg p-4 mb-6 border border-gray-600/50">
-            <div className="flex items-start space-x-4">
-                <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <ChartBarIcon className="w-5 h-5 text-white" />
+        <div className="bg-white rounded-2xl p-8 mb-8 border border-slate-200 shadow-sm">
+            <div className="flex items-start space-x-6">
+                <div className="mt-1 flex-shrink-0 w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <ChartBarIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="flex-grow">
-                    <h3 className="font-semibold text-lg text-white">Real-Time Campaign Analytics</h3>
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <h3 className="font-bold text-xl text-slate-900">Real-Time Campaign Analytics</h3>
+                    <p className="text-slate-500 text-sm mt-1 mb-6">Live performance tracking based on simulated engagement data.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {kpis.map(kpi => {
                             const kpiData = data[kpi];
                             if (!kpiData) return null;

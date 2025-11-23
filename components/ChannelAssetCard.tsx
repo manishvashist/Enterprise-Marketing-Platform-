@@ -18,17 +18,20 @@ export const ChannelAssetCard: React.FC<ChannelAssetCardProps> = ({ result }) =>
     };
 
     return (
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm animate-fade-in">
-            <div className="flex justify-between items-center pb-3 mb-4 border-b border-slate-100">
-                <h4 className="font-bold text-lg text-teal-700">{result.channel} - Assets</h4>
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg shadow-slate-200/50 animate-fade-in">
+            <div className="flex justify-between items-center pb-4 mb-6 border-b border-slate-100">
+                <h4 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                    <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
+                    {result.channel}
+                </h4>
                 <button
                     onClick={downloadJson}
-                    className="px-3 py-1.5 bg-slate-100 text-xs text-slate-700 font-semibold rounded-md hover:bg-slate-200 transition-colors border border-slate-200"
+                    className="px-4 py-2 bg-slate-50 text-xs text-slate-700 font-bold uppercase tracking-wide rounded-lg hover:bg-slate-100 transition-colors border border-slate-200"
                 >
                     Download JSON
                 </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {result.assets.map(asset => (
                     <SingleAssetCard key={asset.assetId} asset={asset} />
                 ))}

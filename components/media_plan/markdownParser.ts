@@ -1,9 +1,8 @@
 
-
 export const markdownToHtml = (markdown: string): string => {
     let processedMarkdown = markdown
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/---/g, '<hr class="my-6 border-slate-200">');
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>')
+        .replace(/---/g, '<hr class="my-8 border-slate-200">');
 
     const lines = processedMarkdown.split('\n');
     const newLines: string[] = [];
@@ -12,11 +11,30 @@ export const markdownToHtml = (markdown: string): string => {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
-        if (line.startsWith('# ')) { newLines.push(`<h1 class="text-3xl font-extrabold text-slate-900 mb-4">${line.substring(2)}</h1>`); continue; }
-        if (line.startsWith('## ')) { newLines.push(`<h2 class="text-2xl font-bold text-indigo-700 mt-8 mb-4 border-b border-slate-200 pb-2">${line.substring(3)}</h2>`); continue; }
-        if (line.startsWith('### ')) { newLines.push(`<h3 class="text-xl font-semibold text-slate-800 mt-6 mb-3">${line.substring(4)}</h3>`); continue; }
-        if (line.startsWith('**💡')) { newLines.push(`<p class="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-800 text-sm font-medium">${line}</p>`); continue; }
+        if (line.startsWith('# ')) { 
+            newLines.push(`<div class="mb-8"><h1 class="text-3xl font-extrabold text-slate-900 mb-2">${line.substring(2)}</h1><div class="h-1 w-20 bg-indigo-600 rounded-full"></div></div>`); 
+            continue; 
+        }
+        if (line.startsWith('## ')) { 
+            newLines.push(`<h2 class="text-xl font-bold text-slate-800 mt-10 mb-4 flex items-center"><span class="w-1.5 h-6 bg-indigo-500 rounded-full mr-3"></span>${line.substring(3)}</h2>`); 
+            continue; 
+        }
+        if (line.startsWith('### ')) { 
+            newLines.push(`<h3 class="text-lg font-bold text-slate-700 mt-6 mb-2">${line.substring(4)}</h3>`); 
+            continue; 
+        }
+        if (line.startsWith('**💡')) { 
+            newLines.push(`<div class="mt-8 p-5 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-sm font-medium shadow-sm flex items-start gap-3"><span class="text-xl">💡</span><p>${line.replace('**💡', '').trim()}</p></div>`); 
+            continue; 
+        }
+        
+        // List items
+        if (line.trim().startsWith('- ')) {
+             newLines.push(`<li class="ml-4 list-disc marker:text-indigo-400 pl-2 mb-1">${line.substring(2)}</li>`);
+             continue;
+        }
 
+        // Tables
         if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
             if (!inTable) {
                 inTable = true;
@@ -24,23 +42,20 @@ export const markdownToHtml = (markdown: string): string => {
                 const separatorLine = lines[i + 1];
 
                 if (separatorLine && separatorLine.includes('---')) {
-                    // Start of a table with a header
-                    newLines.push('<div class="overflow-x-auto my-4 rounded-lg border border-slate-200"><table class="w-full text-sm text-left text-slate-600">');
-                    newLines.push('<thead class="text-xs text-slate-700 uppercase bg-slate-50"><tr>');
-                    headerLine.split('|').slice(1, -1).forEach(h => newLines.push(`<th scope="col" class="px-4 py-3 font-bold">${h.trim()}</th>`));
-                    newLines.push('</tr></thead><tbody class="divide-y divide-slate-200">');
-                    i++; // Skip separator line
+                    newLines.push('<div class="overflow-x-auto my-6 rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left text-slate-600">');
+                    newLines.push('<thead class="text-xs text-slate-500 uppercase bg-slate-50 font-bold tracking-wider"><tr>');
+                    headerLine.split('|').slice(1, -1).forEach(h => newLines.push(`<th scope="col" class="px-6 py-4 whitespace-nowrap">${h.trim()}</th>`));
+                    newLines.push('</tr></thead><tbody class="divide-y divide-slate-100 bg-white">');
+                    i++; 
                 } else {
-                    // Table without a header (or broken markdown), treat as a normal row
-                    newLines.push('<div class="overflow-x-auto my-4 rounded-lg border border-slate-200"><table class="w-full text-sm text-left text-slate-600"><tbody class="divide-y divide-slate-200">');
-                    newLines.push('<tr class="bg-white hover:bg-slate-50 transition-colors">');
-                    line.split('|').slice(1, -1).forEach(c => newLines.push(`<td class="px-4 py-3">${c.trim()}</td>`));
+                    newLines.push('<div class="overflow-x-auto my-6 rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left text-slate-600"><tbody class="divide-y divide-slate-100 bg-white">');
+                    newLines.push('<tr class="hover:bg-slate-50 transition-colors">');
+                    line.split('|').slice(1, -1).forEach(c => newLines.push(`<td class="px-6 py-4">${c.trim()}</td>`));
                     newLines.push('</tr>');
                 }
             } else {
-                // Table body row
-                newLines.push('<tr class="bg-white hover:bg-slate-50 transition-colors">');
-                line.split('|').slice(1, -1).forEach(c => newLines.push(`<td class="px-4 py-3">${c.trim()}</td>`));
+                newLines.push('<tr class="hover:bg-slate-50 transition-colors">');
+                line.split('|').slice(1, -1).forEach(c => newLines.push(`<td class="px-6 py-4 border-t border-slate-100">${c.trim()}</td>`));
                 newLines.push('</tr>');
             }
         } else {

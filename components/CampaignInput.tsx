@@ -40,10 +40,10 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
       <button
         onClick={() => onToggleRecording(field)}
         disabled={isLoading}
-        className={`absolute right-3 bottom-3 p-2 rounded-full transition-all duration-300 ${
+        className={`absolute right-4 bottom-4 p-2.5 rounded-full transition-all duration-300 ${
           isRecording 
-            ? 'bg-orange-600 text-white animate-pulse-ring scale-110' 
-            : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 shadow-sm'
+            ? 'bg-orange-600 text-white animate-pulse-ring scale-110 shadow-lg shadow-orange-600/30' 
+            : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 shadow-sm hover:shadow-md'
         } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500`}
         aria-label={isRecording ? `Stop recording ${field}` : `Start recording ${field}`}
       >
@@ -65,53 +65,60 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 border border-slate-200">
-      <h2 className="text-2xl font-bold mb-1 text-slate-900">Generative Campaign Builder</h2>
-      <p className="text-slate-500 mb-6">Define your goal and audience to let our AI build your next campaign.</p>
+    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 p-8 md:p-10 border border-slate-100">
+      <div className="mb-8 text-center max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold mb-3 text-slate-900 tracking-tight">What are we building today?</h2>
+        <p className="text-lg text-slate-500">Define your goal and audience, and let our AI engine orchestrate the rest.</p>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="relative">
-          <label htmlFor="campaign-goal" className="block text-sm font-medium text-slate-700 mb-2">
-            1. Describe your campaign goal
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="relative group">
+          <label htmlFor="campaign-goal" className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">
+            1. Campaign Goal
           </label>
-          <textarea
-            id="campaign-goal"
-            value={goalPrompt}
-            onChange={(e) => setGoalPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={`e.g., "Increase e-commerce sales by 15% in Q3"`}
-            className="w-full h-32 p-4 pr-14 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none text-slate-900 placeholder-slate-400 shadow-inner"
-            disabled={isLoading}
-          />
-          <MicButton field="goal" />
-        </div>
-
-        <div className="relative">
-            <label htmlFor="target-audience" className="block text-sm font-medium text-slate-700 mb-2">
-                2. Define your target audience
-            </label>
+          <div className="relative">
             <textarea
-                id="target-audience"
-                value={audiencePrompt}
-                onChange={(e) => setAudiencePrompt(e.target.value)}
+                id="campaign-goal"
+                value={goalPrompt}
+                onChange={(e) => setGoalPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={`e.g., "Customers who viewed product X but didn't purchase"`}
-                className="w-full h-32 p-4 pr-14 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none text-slate-900 placeholder-slate-400 shadow-inner"
+                placeholder={`e.g., "Increase e-commerce sales for our new summer line by 15% in Q3"`}
+                className="w-full h-40 p-5 pr-16 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none text-slate-900 placeholder-slate-400 shadow-inner text-lg leading-relaxed group-hover:bg-white group-hover:border-slate-300"
                 disabled={isLoading}
             />
-            <MicButton field="audience" />
+            <MicButton field="goal" />
+          </div>
+        </div>
+
+        <div className="relative group">
+            <label htmlFor="target-audience" className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                2. Target Audience
+            </label>
+            <div className="relative">
+                <textarea
+                    id="target-audience"
+                    value={audiencePrompt}
+                    onChange={(e) => setAudiencePrompt(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`e.g., "Urban millennials aged 25-35 who have visited our site but haven't purchased"`}
+                    className="w-full h-40 p-5 pr-16 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none text-slate-900 placeholder-slate-400 shadow-inner text-lg leading-relaxed group-hover:bg-white group-hover:border-slate-300"
+                    disabled={isLoading}
+                />
+                <MicButton field="audience" />
+            </div>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col sm:flex-row sm:justify-between items-center gap-4">
-        <p className="text-xs text-slate-400 order-2 sm:order-1 self-start sm:self-center bg-slate-50 px-2 py-1 rounded border border-slate-200">
-            Pro-tip: Use <kbd className="font-sans font-bold">Ctrl</kbd> + <kbd className="font-sans font-bold">Enter</kbd> to generate.
-        </p>
-        <div className="relative w-full sm:w-auto order-1 sm:order-2" title={generateButtonTooltip()}>
+      <div className="mt-10 flex flex-col sm:flex-row sm:justify-between items-center gap-6 pt-8 border-t border-slate-100">
+        <div className="text-sm text-slate-400 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/50">
+            <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
+            Pro-tip: Use <kbd className="font-mono font-bold text-slate-600 mx-1">Ctrl + Enter</kbd> to generate instantly.
+        </div>
+        <div className="relative w-full sm:w-auto" title={generateButtonTooltip()}>
             <button
               onClick={onGenerate}
               disabled={isGenerateDisabled}
-              className="w-full px-8 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-600/20 hover:shadow-xl hover:shadow-orange-600/30 hover:-translate-y-0.5 flex items-center justify-center"
+              className="w-full sm:w-auto px-10 py-4 bg-orange-600 text-white text-lg font-bold rounded-full hover:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all shadow-xl shadow-orange-600/25 hover:shadow-2xl hover:shadow-orange-600/40 hover:-translate-y-1 flex items-center justify-center gap-3"
             >
               {isLoading ? (
                 <>
@@ -119,10 +126,15 @@ export const CampaignInput: React.FC<CampaignInputProps> = ({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Generating...
+                  Orchestrating Campaign...
                 </>
               ) : (
-                '✨ Generate Campaign'
+                <>
+                    <span>Generate Campaign</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                </>
               )}
             </button>
         </div>

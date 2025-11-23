@@ -22,7 +22,8 @@ export const Sparkline: React.FC<SparklineProps> = ({ data, trend }) => {
     })
     .join(' ');
 
-  const strokeColor = trend === 'up' ? '#4ade80' : trend === 'down' ? '#f87171' : '#9ca3af';
+  // Updated colors for light theme
+  const strokeColor = trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#94a3b8';
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">

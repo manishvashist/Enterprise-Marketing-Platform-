@@ -1,23 +1,20 @@
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { CampaignInput } from './CampaignInput';
 import { JourneyCanvas } from './JourneyCanvas';
-import { ImageEditor } from './ImageEditor';
 import { generateCampaignJourney, generateAssetsForChannel, generateVideoForChannel, startTranscriptionSession, createBlob } from '../services/geminiService';
 import { databaseService } from '../services/databaseService';
 import { subscriptionService } from '../services/subscriptionService';
 import { Campaign, User, AssetGenerationProgress, VideoAssetState, UsageInfo } from '../types';
-import { ConnectionsView } from './ConnectionsView';
 import { SavedCampaigns } from './SavedCampaigns';
 import { BillingView } from './billing/BillingView';
 import { UsageMessage } from './UsageMessage';
 import { authService } from '../services/authService';
 import { seedDatabase } from '../services/seedDatabase';
+import { ConnectionsView } from './ConnectionsView';
 
 type LiveSession = Awaited<ReturnType<typeof startTranscriptionSession>>;
-type AppView = 'campaign' | 'admin' | 'billing';
+type AppView = 'campaign' | 'admin' | 'billing' | 'connections';
 type BillingSubView = 'subscription' | 'profile';
 
 interface MainAppProps {
@@ -28,16 +25,18 @@ interface MainAppProps {
 }
 
 const UpgradeRequired: React.FC<{ setView: (view: AppView) => void }> = ({ setView }) => (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl p-8 border-2 border-dashed border-slate-300">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-3xl p-12 border border-slate-200 shadow-sm max-w-2xl mx-auto mt-20">
         <div className="text-center">
-             <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 className="mt-4 text-xl font-semibold text-slate-800">Subscription Required</h3>
-            <p className="mt-2 text-slate-500">Your trial has ended. Please subscribe to continue using the platform.</p>
+             <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-orange-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+             </div>
+            <h3 className="text-2xl font-bold text-slate-900">Subscription Required</h3>
+            <p className="mt-3 text-slate-500 max-w-md mx-auto text-lg">Your trial has ended. Please subscribe to continue generating high-converting campaigns.</p>
             <button
                 onClick={() => setView('billing')}
-                className="mt-6 px-6 py-2.5 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20"
+                className="mt-8 px-8 py-3 bg-orange-600 text-white font-bold rounded-full hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20 hover:-translate-y-0.5"
             >
                 View Plans
             </button>
@@ -142,7 +141,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
 
     try {
       const fullPrompt = `Campaign Goal: ${goalPrompt}\nTarget Audience: ${audiencePrompt}`;
-      // This call includes the usage check before generation
       const generatedCampaignData = await generateCampaignJourney(fullPrompt, user);
       
       const usage = await subscriptionService.getUsageInfo(user.id);
@@ -180,28 +178,19 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     try {
         let savedCampaign: Campaign;
         if (campaign.id) {
-            // Update existing campaign
             savedCampaign = await databaseService.saveCampaign(user.id, campaign);
             onSetGlobalSuccess("Campaign updated successfully!");
         } else {
-            // Create new campaign
             const { userId, isTrialCampaign, ...campaignData } = campaign;
-            
-            // This service call handles usage tracking AND database creation
             savedCampaign = await subscriptionService.createCampaignUsage(user.id, campaignData as Omit<Campaign, 'id'|'userId'|'subscriptionId'|'isTrialCampaign'|'createdAt'|'updatedAt'>);
             onSetGlobalSuccess("Campaign saved successfully!");
 
-            // After saving, we must update the user state to reflect new usage stats
             const updatedUser = await authService.getCurrentUser();
             if (updatedUser) {
               onUserUpdate(updatedUser);
             }
         }
-        
-        // Update the current campaign state with the full object from DB (including ID)
         setCampaign(savedCampaign);
-        
-        // Refresh the list of saved campaigns to show the new/updated one
         const campaigns = await databaseService.getCampaignsForUser(user.id);
         setSavedCampaigns(campaigns);
 
@@ -218,7 +207,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     const updatedCampaign = { ...campaign, ...updates };
     setCampaign(updatedCampaign);
     
-    // Only autosave if the campaign has already been saved (has an ID)
     if (updatedCampaign.id) {
         try {
            await databaseService.saveCampaign(user.id, updatedCampaign);
@@ -237,13 +225,10 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
   }, []);
 
   const handleEditAsNewCampaign = useCallback((campaignToEdit: Campaign) => {
-    // Populate inputs from the selected campaign
     setGoalPrompt(campaignToEdit.description || '');
     setAudiencePrompt(campaignToEdit.audienceQuery || '');
-    // Clear the canvas to indicate a new generation is required
     setCampaign(null);
     setError(null);
-    // Scroll to top for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' });
     onSetGlobalSuccess("Campaign loaded as a new template. Modify the prompts and generate a new version.");
   }, [onSetGlobalSuccess]);
@@ -253,7 +238,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     
     const originalCampaigns = [...savedCampaigns];
     setDeletingCampaignId(campaignId);
-    // Optimistic UI update
     setSavedCampaigns(prevCampaigns => prevCampaigns.filter(c => c.id !== campaignId));
     setError(null);
 
@@ -266,7 +250,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     } catch(err) {
         console.error("Failed to delete campaign", err);
         setError("Failed to delete the campaign. Please try again.");
-        // Revert optimistic update on failure
         setSavedCampaigns(originalCampaigns);
     } finally {
         setDeletingCampaignId(null);
@@ -284,8 +267,7 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
       }
     }));
     
-    // Simulate progress
-    const estimatedTime = 45; // seconds
+    const estimatedTime = 45;
     let elapsed = 0;
     const interval = setInterval(() => {
       elapsed += 1;
@@ -332,11 +314,9 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
   const handleGenerateForAllChannels = useCallback(async () => {
     setAssetGenerationProgress(prev => ({ ...prev, isGeneratingAll: true }));
     for (const channel of recommendedChannels) {
-        // Check if already completed or failed
         const status = assetGenerationProgress.channelProgress[channel.channelName]?.status;
         if (status !== 'completed' && status !== 'in-progress') {
             await handleGenerateForChannel(channel.channelName, channel.category);
-            // Add a small delay between requests
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
@@ -362,7 +342,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
         let hasKey = await window.aistudio.hasSelectedApiKey();
         if (!hasKey) {
             await window.aistudio.openSelectKey();
-            // Assume success after opening dialog to avoid race conditions
             hasKey = true; 
         }
         setIsApiKeySelected(hasKey);
@@ -465,7 +444,6 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     }
   }, [recordingField, startRecording, stopRecording]);
   
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
         if (liveSessionRef.current) {
@@ -496,8 +474,8 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
     switch (view) {
         case 'campaign':
             return (
-                <>
-                    <div className="w-full max-w-4xl mx-auto">
+                <div className="space-y-12">
+                    <div className="w-full max-w-5xl mx-auto">
                         <CampaignInput
                             user={user}
                             goalPrompt={goalPrompt}
@@ -512,16 +490,21 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                         />
                     </div>
                     {error && (
-                        <div className="w-full max-w-4xl mx-auto mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex justify-between items-center animate-fade-in shadow-sm">
-                            <span className="font-medium">{error}</span>
-                            <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-100 text-red-500">
+                        <div className="w-full max-w-5xl mx-auto p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 flex justify-between items-center animate-fade-in shadow-sm">
+                            <span className="font-medium flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {error}
+                            </span>
+                            <button onClick={() => setError(null)} className="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
                     )}
-                    <div className="flex-grow mt-8">
+                    <div className="flex-grow">
                         <JourneyCanvas
                             user={user}
                             campaign={campaign}
@@ -552,32 +535,32 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                         deletingId={deletingCampaignId}
                         onSetGlobalSuccess={onSetGlobalSuccess}
                     />
-                </>
+                </div>
             );
         case 'billing':
             return <BillingView user={user} onSubscriptionChange={onUserUpdate} initialTab={initialBillingTab} onSetGlobalSuccess={onSetGlobalSuccess} />;
         case 'admin':
             return user.role === 'Admin' ? (
-                <div className="p-8">
-                    <h1 className="text-slate-900 text-2xl font-bold mb-6">Admin Dashboard</h1>
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-8">Admin Dashboard</h1>
                     
-                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm max-w-xl">
-                        <h2 className="text-lg font-semibold text-slate-800 mb-4">Database Maintenance</h2>
-                        <p className="text-slate-600 mb-6">
+                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                        <h2 className="text-xl font-bold text-slate-900 mb-4">Database Maintenance</h2>
+                        <p className="text-slate-500 mb-8 leading-relaxed">
                             Initialize or reset the Firestore database collections with default schemas and sample data.
                             <br />
-                            <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded mt-2 inline-block border border-orange-100">
+                            <span className="text-xs font-semibold text-orange-700 bg-orange-50 px-2 py-1 rounded mt-2 inline-block border border-orange-100">
                                 Warning: This creates dummy data associated with your user ID.
                             </span>
                         </p>
                         <button 
                             onClick={handleSeedDatabase}
                             disabled={isSeeding}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-slate-300 transition-colors flex items-center"
+                            className="px-6 py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 disabled:bg-slate-300 transition-all flex items-center shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                         >
                             {isSeeding ? (
                                 <>
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -587,7 +570,9 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
                         </button>
                     </div>
                 </div>
-            ) : <div className="text-center p-10 text-slate-500">You do not have access to this area.</div>;
+            ) : <div className="text-center p-12 text-slate-500">You do not have access to this area.</div>;
+        case 'connections':
+            return <ConnectionsView user={user} onUserUpdate={onUserUpdate} />;
         default:
             return null;
     }
@@ -595,10 +580,10 @@ export const MainApp: React.FC<MainAppProps> = ({ user, onLogout, onUserUpdate, 
 
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-600 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-600 flex flex-col font-sans selection:bg-orange-100 selection:text-orange-900">
       <Header currentView={view} setView={handleSetView} user={user} onLogout={onLogout} />
       <UsageMessage usageInfo={usageInfo} setView={handleSetView} />
-      <main className="flex-grow container mx-auto px-4 md:p-8 flex flex-col">
+      <main className="flex-grow container mx-auto px-6 md:px-12 py-12 flex flex-col">
         {renderCurrentView()}
       </main>
     </div>

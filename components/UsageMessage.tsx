@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UsageInfo } from '../types';
 
 type BillingSubView = 'subscription' | 'profile';
@@ -9,7 +9,9 @@ interface UsageMessageProps {
 }
 
 export const UsageMessage: React.FC<UsageMessageProps> = ({ usageInfo, setView }) => {
-  if (!usageInfo) return null;
+  const [isVisible, setIsVisible] = useState(true);
+
+  if (!usageInfo || !isVisible) return null;
 
   const { canGenerate, reason, remaining, limit, trialDaysRemaining, daysUntilReset } = usageInfo;
 
@@ -50,7 +52,7 @@ export const UsageMessage: React.FC<UsageMessageProps> = ({ usageInfo, setView }
 
   return (
     <div className="container mx-auto px-4 md:px-8 -mt-4 mb-4">
-        <div className={`p-3 rounded-lg border ${borderColor} ${bgColor} flex items-center justify-center text-center gap-x-4 shadow-sm transition-colors`}>
+        <div className={`relative p-3 pr-10 rounded-lg border ${borderColor} ${bgColor} flex items-center justify-center text-center gap-x-4 shadow-sm transition-colors`}>
             <p className={`text-sm ${textColor} font-medium`}>
                 {content.message}
             </p>
@@ -62,6 +64,17 @@ export const UsageMessage: React.FC<UsageMessageProps> = ({ usageInfo, setView }
                     {content.buttonText}
                 </button>
             )}
+            
+            {/* Close Button */}
+            <button 
+                onClick={() => setIsVisible(false)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label="Close message"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+            </button>
         </div>
     </div>
   );
